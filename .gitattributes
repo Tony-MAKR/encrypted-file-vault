@@ -1,0 +1,7 @@
+# Keep source text predictable across Windows, macOS and Linux.
+* text=auto eol=lf
+
+# Windows-first helper scripts; Git will check them out with CRLF.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf

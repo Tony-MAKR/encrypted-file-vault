@@ -1,0 +1,58 @@
+:root {
+  --bg: #f3f6f5;
+  --surface: rgba(255, 255, 255, 0.86);
+  --surface-soft: rgba(255, 255, 255, 0.6);
+  --subtle: rgba(15, 23, 42, 0.04);
+  --border: rgba(15, 23, 42, 0.1);
+  --border-strong: rgba(15, 23, 42, 0.18);
+  --button-bg: #ffffff;
+  --text-strong: #0b1f1d;
+  --text-muted: #435451;
+  --text-faint: #70807d;
+  --accent: #0f766e;
+  --shadow: 0 20px 50px rgba(15, 23, 42, 0.07);
+  --mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+  --sans: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
+
+  font-family: var(--sans);
+  color: var(--text-muted);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(15, 118, 110, 0.13), transparent 34%),
+    radial-gradient(circle at 88% 0%, rgba(14, 116, 144, 0.1), transparent 30%),
+    var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: #ffffff;
+  background: var(--accent);
+}
