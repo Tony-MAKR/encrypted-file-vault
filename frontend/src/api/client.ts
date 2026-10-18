@@ -38,6 +38,117 @@ export interface ResetPasswordPayload {
   new_password_confirm: string
 }
 
+export type VaultItemType = 'file' | 'text'
+export type ArchivedFilter = 'active' | 'archived' | 'all'
+
+export interface UserBrief {
+  id: number
+  username: string
+  display_name: string
+  role: UserRole
+  is_active: boolean
+}
+
+export interface VaultGroupSummary {
+  id: number
+  name: string
+  description: string
+  member_count: number
+  granted_item_count: number
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface GroupGrantedItem {
+  id: number
+  title: string
+  item_type: VaultItemType
+  item_type_label: string
+  is_archived: boolean
+  created_at: string
+}
+
+export interface VaultGroupDetail extends VaultGroupSummary {
+  members: UserBrief[]
+  granted_items: GroupGrantedItem[]
+}
+
+export interface VaultItemSummary {
+  id: number
+  title: string
+  item_type: VaultItemType
+  item_type_label: string
+  description: string
+  owner: UserBrief
+  is_archived: boolean
+  archived_at: string | null
+  grant_count: number
+  group_grant_count: number
+  user_grant_count: number
+  can_open_content: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface GroupGrantInfo {
+  id: number
+  group_id: number
+  group_name: string
+  granted_by: string | null
+  created_at: string
+}
+
+export interface UserGrantInfo {
+  id: number
+  user_id: number
+  username: string
+  display_name: string
+  is_active: boolean
+  granted_by: string | null
+  created_at: string
+}
+
+export interface VaultItemDetail extends VaultItemSummary {
+  can_view_metadata: boolean
+  group_grants: GroupGrantInfo[]
+  user_grants: UserGrantInfo[]
+  effective_users: UserBrief[]
+  effective_user_count: number
+  content_state: 'placeholder'
+  notice: string
+}
+
+export interface MyVaultItem {
+  id: number
+  title: string
+  item_type: VaultItemType
+  item_type_label: string
+  description: string
+  owner: UserBrief
+  content_state: 'placeholder'
+  notice: string
+  created_at: string
+  updated_at: string
+}
+
+export interface GroupPayload {
+  name: string
+  description: string
+}
+
+export interface ItemPayload {
+  title: string
+  item_type: VaultItemType
+  description: string
+}
+
+export interface GrantResult {
+  added: number[]
+  already_granted: number[]
+  grant_count: number
+}
+
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
 ).replace(/\/$/, '')
@@ -52,6 +163,15 @@ const FIELD_LABELS: Record<string, string> = {
   new_password: '新密码',
   new_password_confirm: '确认新密码',
   role: '角色',
+  name: '名称',
+  description: '说明',
+  title: '标题',
+  item_type: '类型',
+  group_id: '用户组',
+  group_ids: '用户组',
+  user_id: '用户',
+  user_ids: '用户',
+  owner_id: '新所有者',
   detail: '',
   non_field_errors: '',
 }
@@ -267,4 +387,154 @@ export const adminApi = {
     apiFetch<User>(`/api/v1/admin/users/${userId}/unlock/`, {
       method: 'POST',
     }),
+
+  listGroups: ({
+    page = 1,
+    q = '',
+    pageSize = 20,
+  }: {
+    page?: number
+    q?: string
+    pageSize?: number
+  } = {}) =>
+    apiFetch<Paginated<VaultGroupSummary>>(
+      `/api/v1/admin/groups/?page=${page}&page_size=${pageSize}&q=${encodeURIComponent(q)}`,
+    ),
+
+  createGroup: (payload: GroupPayload) =>
+    apiFetch<VaultGroupDetail>('/api/v1/admin/groups/', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getGroup: (groupId: number) =>
+    apiFetch<VaultGroupDetail>(`/api/v1/admin/groups/${groupId}/`),
+
+  updateGroup: (groupId: number, payload: Partial<GroupPayload>) =>
+    apiFetch<VaultGroupDetail>(`/api/v1/admin/groups/${groupId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  deleteGroup: (groupId: number) =>
+    apiFetch<void>(`/api/v1/admin/groups/${groupId}/`, {
+      method: 'DELETE',
+    }),
+
+  addGroupMembers: (groupId: number, userIds: number[]) =>
+    apiFetch<{
+      added: UserBrief[]
+      already_members: number[]
+      member_count: number
+    }>(`/api/v1/admin/groups/${groupId}/members/`, {
+      method: 'POST',
+      body: JSON.stringify({ user_ids: userIds }),
+    }),
+
+  removeGroupMember: (groupId: number, userId: number) =>
+    apiFetch<void>(`/api/v1/admin/groups/${groupId}/members/${userId}/`, {
+      method: 'DELETE',
+    }),
+
+  listItems: ({
+    page = 1,
+    q = '',
+    itemType = '',
+    archived = 'active',
+    pageSize = 20,
+  }: {
+    page?: number
+    q?: string
+    itemType?: string
+    archived?: ArchivedFilter
+    pageSize?: number
+  } = {}) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+      q,
+      archived,
+    })
+    if (itemType) {
+      params.set('item_type', itemType)
+    }
+    return apiFetch<Paginated<VaultItemSummary>>(
+      `/api/v1/admin/items/?${params.toString()}`,
+    )
+  },
+
+  createItem: (payload: ItemPayload) =>
+    apiFetch<VaultItemDetail>('/api/v1/admin/items/', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getItem: (itemId: number) =>
+    apiFetch<VaultItemDetail>(`/api/v1/admin/items/${itemId}/`),
+
+  updateItem: (
+    itemId: number,
+    payload: { title?: string; description?: string },
+  ) =>
+    apiFetch<VaultItemDetail>(`/api/v1/admin/items/${itemId}/`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  archiveItem: (itemId: number) =>
+    apiFetch<VaultItemDetail>(`/api/v1/admin/items/${itemId}/archive/`, {
+      method: 'POST',
+    }),
+
+  unarchiveItem: (itemId: number) =>
+    apiFetch<VaultItemDetail>(`/api/v1/admin/items/${itemId}/unarchive/`, {
+      method: 'POST',
+    }),
+
+  transferOwner: (itemId: number, ownerId: number) =>
+    apiFetch<VaultItemDetail>(`/api/v1/admin/items/${itemId}/owner/`, {
+      method: 'POST',
+      body: JSON.stringify({ owner_id: ownerId }),
+    }),
+
+  addGroupGrants: (itemId: number, groupIds: number[]) =>
+    apiFetch<GrantResult>(`/api/v1/admin/items/${itemId}/grants/groups/`, {
+      method: 'POST',
+      body: JSON.stringify({ group_ids: groupIds }),
+    }),
+
+  removeGroupGrant: (itemId: number, groupId: number) =>
+    apiFetch<void>(
+      `/api/v1/admin/items/${itemId}/grants/groups/${groupId}/`,
+      { method: 'DELETE' },
+    ),
+
+  addUserGrants: (itemId: number, userIds: number[]) =>
+    apiFetch<GrantResult>(`/api/v1/admin/items/${itemId}/grants/users/`, {
+      method: 'POST',
+      body: JSON.stringify({ user_ids: userIds }),
+    }),
+
+  removeUserGrant: (itemId: number, userId: number) =>
+    apiFetch<void>(`/api/v1/admin/items/${itemId}/grants/users/${userId}/`, {
+      method: 'DELETE',
+    }),
+}
+
+export const vaultApi = {
+  listMyItems: ({
+    page = 1,
+    q = '',
+    pageSize = 20,
+  }: {
+    page?: number
+    q?: string
+    pageSize?: number
+  } = {}) =>
+    apiFetch<Paginated<MyVaultItem>>(
+      `/api/v1/items/?page=${page}&page_size=${pageSize}&q=${encodeURIComponent(q)}`,
+    ),
+
+  getMyItem: (itemId: number) =>
+    apiFetch<MyVaultItem>(`/api/v1/items/${itemId}/`),
 }

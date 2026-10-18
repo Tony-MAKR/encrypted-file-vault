@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(PROJECT_ROOT / ".env")
 
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.3.0"
 
 
 def _get_bool(name: str, default: bool = False) -> bool:
@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "apps.core",
     "apps.accounts",
+    "apps.vault",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

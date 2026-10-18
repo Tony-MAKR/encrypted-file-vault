@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.test import Client
 
 from apps.accounts.models import User
+from apps.vault.models import VaultGroup, VaultItem
 from tests.helpers import TEST_PASSWORD
 
 
@@ -49,6 +50,52 @@ def user_client(normal_user: User) -> Client:
     client = Client()
     client.force_login(normal_user)
     return client
+
+
+@pytest.fixture
+def second_admin(db) -> User:
+    return User.objects.create_user(
+        username="admin2",
+        display_name="第二管理员",
+        password=TEST_PASSWORD,
+        role=User.Role.ADMIN,
+    )
+
+
+@pytest.fixture
+def other_user(db) -> User:
+    return User.objects.create_user(
+        username="bob",
+        display_name="Bob",
+        password=TEST_PASSWORD,
+        role=User.Role.USER,
+    )
+
+
+@pytest.fixture
+def other_client(other_user: User) -> Client:
+    client = Client()
+    client.force_login(other_user)
+    return client
+
+
+@pytest.fixture
+def vault_group(db, admin_user: User) -> VaultGroup:
+    return VaultGroup.objects.create(
+        name="财务组",
+        description="负责财务资料",
+        created_by=admin_user,
+    )
+
+
+@pytest.fixture
+def vault_item(db, admin_user: User) -> VaultItem:
+    return VaultItem.objects.create(
+        title="数据库密码",
+        item_type=VaultItem.ItemType.TEXT,
+        description="生产数据库的登录信息",
+        owner=admin_user,
+    )
 
 
 def csrf_token(client: Client) -> str:

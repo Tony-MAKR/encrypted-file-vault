@@ -3,7 +3,13 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext'
 import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { GroupDetailPage } from './pages/GroupDetailPage'
+import { GroupsPage } from './pages/GroupsPage'
+import { ItemDetailPage } from './pages/ItemDetailPage'
+import { ItemsPage } from './pages/ItemsPage'
 import { LoginPage } from './pages/LoginPage'
+import { MyItemDetailPage } from './pages/MyItemDetailPage'
+import { MyItemsPage } from './pages/MyItemsPage'
 import { SetupPage } from './pages/SetupPage'
 import { UsersPage } from './pages/UsersPage'
 import './App.css'
@@ -136,6 +142,54 @@ function App() {
           <AdminRoute>
             <UsersPage />
           </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/groups"
+        element={
+          <AdminRoute>
+            <GroupsPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/groups/:groupId"
+        element={
+          <AdminRoute>
+            <GroupDetailPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/items"
+        element={
+          <AdminRoute>
+            <ItemsPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/items/:itemId"
+        element={
+          <AdminRoute>
+            <ItemDetailPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/items"
+        element={
+          <ProtectedRoute>
+            <MyItemsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/items/:itemId"
+        element={
+          <ProtectedRoute>
+            <MyItemDetailPage />
+          </ProtectedRoute>
         }
       />
       <Route

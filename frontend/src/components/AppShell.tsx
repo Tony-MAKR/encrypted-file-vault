@@ -5,7 +5,7 @@ import { BrandMark } from './BrandMark'
 
 interface AppShellProps {
   children: ReactNode
-  active?: 'dashboard' | 'users'
+  active?: 'dashboard' | 'users' | 'groups' | 'items' | 'my-items'
 }
 
 export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
@@ -28,7 +28,7 @@ export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
           <BrandMark small />
           <span>
             <strong>加密文件管理系统</strong>
-            <small>第 2 阶段 · 账号与角色</small>
+            <small>第 3 阶段 · 用户组与授权</small>
           </span>
         </Link>
 
@@ -37,11 +37,33 @@ export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
             主页
           </Link>
           {user.role === 'admin' && (
+            <>
+              <Link
+                className={active === 'groups' ? 'active' : ''}
+                to="/admin/groups"
+              >
+                用户组
+              </Link>
+              <Link
+                className={active === 'items' ? 'active' : ''}
+                to="/admin/items"
+              >
+                内容条目
+              </Link>
+              <Link
+                className={active === 'users' ? 'active' : ''}
+                to="/admin/users"
+              >
+                用户管理
+              </Link>
+            </>
+          )}
+          {user.role === 'user' && (
             <Link
-              className={active === 'users' ? 'active' : ''}
-              to="/admin/users"
+              className={active === 'my-items' ? 'active' : ''}
+              to="/items"
             >
-              用户管理
+              我的内容
             </Link>
           )}
         </nav>
@@ -65,7 +87,7 @@ export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
 
       <footer className="app-footer">
         <span>仅限本机开发环境</span>
-        <span>第 2 阶段 / 共 9 个阶段</span>
+        <span>第 3 阶段 / 共 9 个阶段</span>
       </footer>
     </div>
   )

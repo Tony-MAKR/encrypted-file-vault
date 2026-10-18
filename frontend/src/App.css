@@ -880,6 +880,255 @@
   }
 }
 
+/* Stage 3: groups, items and authorization */
+.truncate-cell {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.field textarea {
+  width: 100%;
+  min-height: 84px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-solid);
+  color: var(--text-strong);
+  font-size: 15px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.field textarea::placeholder {
+  color: #9aa6a3;
+}
+
+.field textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+  outline: none;
+}
+
+.field select[multiple] {
+  min-height: 96px;
+  padding: 6px;
+}
+
+.field select[multiple] option {
+  padding: 5px 7px;
+  border-radius: 6px;
+}
+
+.detail-grid,
+.grant-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+
+.filter-toolbar {
+  align-items: flex-end;
+}
+
+.filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-controls select {
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface-solid);
+  color: var(--text-strong);
+  font-size: 14px;
+}
+
+.info-list {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 20px;
+}
+
+.info-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.info-list dt {
+  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.info-list dd {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.member-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--subtle);
+}
+
+.member-chip > span {
+  display: grid;
+  gap: 1px;
+}
+
+.member-chip strong {
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.member-chip small {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.grant-add-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.field-inline {
+  display: grid;
+  flex: 1;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.field-inline select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface-solid);
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.grant-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grant-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.grant-list li > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.grant-list strong {
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.grant-list small {
+  color: var(--text-faint);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.grant-items {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grant-items li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.callout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 860px) {
+  .detail-grid,
+  .grant-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .grant-add-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-toolbar {
+    align-items: flex-start;
+  }
+
+  .info-list > div {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .info-list dd {
+    text-align: left;
+  }
+}
+
 /* Responsive */
 @media (max-width: 860px) {
   .app-shell {
