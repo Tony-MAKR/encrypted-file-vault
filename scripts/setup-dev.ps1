@@ -1,4 +1,4 @@
-# Stage 1 local development setup for Windows.
+# Local development setup for Windows.
 # Run from the project root:
 #   powershell -ExecutionPolicy Bypass -File scripts/setup-dev.ps1
 $ErrorActionPreference = "Stop"
@@ -11,7 +11,7 @@ $ManagePy = Join-Path $Root "backend\manage.py"
 $InitEnv = Join-Path $Root "scripts\init_env.py"
 $Frontend = Join-Path $Root "frontend"
 
-Write-Host "== Encrypted File Vault - Stage 1 setup =="
+Write-Host "== Encrypted File Vault - setup =="
 
 if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
     throw "Python was not found. Install Python 3.12+ and try again."

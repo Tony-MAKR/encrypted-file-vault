@@ -1,4 +1,4 @@
-# Run the Stage 1 automated checks.
+# Run the automated checks.
 $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot

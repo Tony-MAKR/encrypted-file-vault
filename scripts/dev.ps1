@@ -1,4 +1,4 @@
-# Start the Stage 1 backend and frontend in two PowerShell windows.
+# Start the backend and frontend in two PowerShell windows.
 # Run from the project root:
 #   powershell -ExecutionPolicy Bypass -File scripts/dev.ps1
 $ErrorActionPreference = "Stop"

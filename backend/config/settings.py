@@ -1,8 +1,9 @@
 """Django settings for the encrypted file vault.
 
-Stage 1 contains only the foundation: configuration, logging, database
-connectivity, a health endpoint and a small security baseline. Business
-features are intentionally absent.
+The project currently contains the foundation and the account/role layer:
+configuration, logging, database connectivity, sessions, authentication and a
+small security baseline. File storage and content authorization are added in
+later stages.
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(PROJECT_ROOT / ".env")
 
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.2.0"
 
 
 def _get_bool(name: str, default: bool = False) -> bool:
@@ -32,6 +33,16 @@ def _get_bool(name: str, default: bool = False) -> bool:
 def _get_list(name: str, default: str) -> list[str]:
     raw = os.getenv(name, default)
     return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+def _get_int(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return default
 
 
 SECRET_KEY = validate_secret_key(os.getenv("DJANGO_SECRET_KEY"))
@@ -72,7 +83,10 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "apps.core",
+    "apps.accounts",
 ]
+
+AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -83,7 +97,11 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # SecurityHeaders is outer to the custom account middleware so direct
+    # 401/403 responses also receive no-store and hardening headers.
     "apps.core.middleware.SecurityHeadersMiddleware",
+    "apps.accounts.middleware.SessionTimeoutMiddleware",
+    "apps.accounts.middleware.MustChangePasswordMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -121,9 +139,25 @@ DATABASES = {
 # ---------------------------------------------------------------------------
 # Authentication and API defaults
 # ---------------------------------------------------------------------------
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+]
+
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "OPTIONS": {
+            "user_attributes": ("username", "display_name", "email"),
+        },
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 12},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
@@ -132,10 +166,21 @@ REST_FRAMEWORK = {
     # API only: do not expose Django's browsable HTML interface.
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
-    # Stage 1 has no login yet. Failing closed means any future endpoint that
-    # forgets an explicit permission will be inaccessible rather than public.
+    # Failing closed means any future endpoint that forgets an explicit
+    # permission will be inaccessible rather than public.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.accounts.authentication.SessionAuthentication401",
+    ],
+}
+
+# Used by DRF's IP-based login/setup throttles. A later production stage can
+# replace this with Redis; for a single-host local deployment this is enough.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "encrypted-file-dev-cache",
+    }
 }
 
 # ---------------------------------------------------------------------------
@@ -162,10 +207,23 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_AGE = 8 * 60 * 60
+SESSION_SAVE_EVERY_REQUEST = False
 CSRF_COOKIE_SAMESITE = "Lax"
+# The SPA must read the CSRF cookie to copy it into the X-CSRFToken header.
+CSRF_COOKIE_HTTPONLY = False
+CSRF_FAILURE_VIEW = "apps.accounts.views_auth.csrf_failure"
 SESSION_COOKIE_SECURE = _get_bool("DJANGO_SECURE_COOKIES", False)
 CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
 SECURE_SSL_REDIRECT = _get_bool("DJANGO_SECURE_SSL_REDIRECT", False)
+
+# Session lifetime and login lockout (balanced security profile).
+SESSION_IDLE_TIMEOUT_SECONDS = _get_int("SESSION_IDLE_TIMEOUT_SECONDS", 30 * 60)
+SESSION_ABSOLUTE_TIMEOUT_SECONDS = _get_int(
+    "SESSION_ABSOLUTE_TIMEOUT_SECONDS", 8 * 60 * 60
+)
+LOGIN_MAX_FAILED_ATTEMPTS = _get_int("LOGIN_MAX_FAILED_ATTEMPTS", 5)
+LOGIN_LOCKOUT_MINUTES = _get_int("LOGIN_LOCKOUT_MINUTES", 15)
 
 # HSTS is enabled only after HTTPS is configured in a later stage.
 SECURE_HSTS_SECONDS = 0
