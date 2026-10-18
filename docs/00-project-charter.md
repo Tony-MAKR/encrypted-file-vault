@@ -4,9 +4,9 @@
 |---|---|
 | 文档版本 | v1.1 |
 | 日期 | 2026-10-17 |
-| 状态 | **总体方案已确认；第 1 阶段已验收；第 2 阶段已实现、待验收** |
+| 状态 | **总体方案已确认；第 1、2 阶段已验收；第 3 阶段 spec 待审阅** |
 | 确认方式 | 你已回复“按推荐方案来” |
-| 关联文档 | [可行性研究报告](01-feasibility-study.md) · [需求分析说明书](02-requirements-analysis.md) · [第 1 阶段 spec](specs/01-project-foundation.md) · [第 2 阶段 spec](specs/02-accounts-and-roles.md) |
+| 关联文档 | [可行性研究报告](01-feasibility-study.md) · [需求分析说明书](02-requirements-analysis.md) · [第 1 阶段 spec](specs/01-project-foundation.md) · [第 2 阶段 spec](specs/02-accounts-and-roles.md) · [第 3 阶段 spec](specs/03-groups-and-authorization.md) |
 
 ---
 
@@ -96,9 +96,10 @@
 ## 七、下一步
 
 1. 第 1 阶段“项目骨架与基础设施”已于 2026-10-17 验收通过。
-2. 第 2 阶段“账号与角色”已按推荐方案实现，数据库备份和自定义用户表重建已完成。
-3. 真实开发数据库当前仍是 0 个用户；请按 [第 2 阶段实施记录](specs/02-accounts-and-roles.md#十六实施记录2026-10-18) 完成首次管理员设置和验收。
-4. 如果验收通过，我再写第 3 阶段“用户组与授权”的 spec；验收和 spec 通过前不继续写入下一阶段功能。
+2. 第 2 阶段“账号与角色”已于 2026-10-18 验收通过；真实数据库中的现有账号会继续保留。
+3. 请审阅 [第 3 阶段 spec：用户组与授权](specs/03-groups-and-authorization.md)。
+4. 重点确认阶段范围、组结构、删除有授权的组、授权管理方式；本阶段只做新增表迁移，不重建数据库。
+5. 你确认后我才开始开发；确认前不写代码、不改数据库。
 
 ---
 
