@@ -8,9 +8,11 @@ import {
   type VaultGroupSummary,
   type VaultItemDetail,
 } from '../api/client'
+import { AdminContentSection } from '../components/AdminContentSection'
 import { AppShell } from '../components/AppShell'
 import { FormField } from '../components/FormField'
 import { TextareaField } from '../components/TextareaField'
+import { VaultGate } from '../components/VaultGate'
 
 function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : '操作失败，请稍后再试。'
@@ -89,7 +91,6 @@ export function ItemDetailPage() {
   const refreshItem = async () => {
     const data = await adminApi.getItem(itemId)
     setItem(data)
-    return data
   }
 
   const saveMetadata = async (event: FormEvent<HTMLFormElement>) => {
@@ -206,6 +207,49 @@ export function ItemDetailPage() {
       await refreshItem()
     } catch (grantError) {
       setError(messageOf(grantError))
+    } finally {
+      setBusyAction('')
+    }
+  }
+
+  const trashItem = async () => {
+    if (!item) {
+      return
+    }
+    if (
+      !window.confirm(
+        '确定把这条内容删除到回收站吗？普通用户会立即看不到；管理员可在 30 天内恢复。',
+      )
+    ) {
+      return
+    }
+    setBusyAction('trash')
+    setError('')
+    setNotice('')
+    try {
+      const data = await adminApi.trashItem(item.id)
+      setItem(data)
+      setNotice('条目已移入回收站，30 天内可以恢复。')
+    } catch (trashError) {
+      setError(messageOf(trashError))
+    } finally {
+      setBusyAction('')
+    }
+  }
+
+  const restoreItem = async () => {
+    if (!item) {
+      return
+    }
+    setBusyAction('restore')
+    setError('')
+    setNotice('')
+    try {
+      const data = await adminApi.restoreItem(item.id)
+      setItem(data)
+      setNotice('条目已从回收站恢复。')
+    } catch (restoreError) {
+      setError(messageOf(restoreError))
     } finally {
       setBusyAction('')
     }
@@ -339,18 +383,41 @@ export function ItemDetailPage() {
             </span>
           </div>
         </div>
-        <button
-          className="secondary-button"
-          type="button"
-          onClick={() => void toggleArchive()}
-          disabled={busyAction === 'archive'}
-        >
-          {busyAction === 'archive'
-            ? '正在处理…'
-            : item.is_archived
-              ? '恢复条目'
-              : '归档条目'}
-        </button>
+        <div className="row-actions">
+          {item.is_deleted ? (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => void restoreItem()}
+              disabled={busyAction === 'restore'}
+            >
+              {busyAction === 'restore' ? '正在恢复…' : '从回收站恢复'}
+            </button>
+          ) : (
+            <>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => void toggleArchive()}
+                disabled={busyAction === 'archive'}
+              >
+                {busyAction === 'archive'
+                  ? '正在处理…'
+                  : item.is_archived
+                    ? '恢复条目'
+                    : '归档条目'}
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => void trashItem()}
+                disabled={busyAction === 'trash'}
+              >
+                {busyAction === 'trash' ? '正在删除…' : '删除到回收站'}
+              </button>
+            </>
+          )}
+        </div>
       </section>
 
       {notice && (
@@ -364,9 +431,9 @@ export function ItemDetailPage() {
         </div>
       )}
 
-      <div className="form-success page-banner" role="status">
-        {item.notice}
-      </div>
+      <VaultGate>
+        <AdminContentSection item={item} onChanged={refreshItem} />
+      </VaultGate>
 
       <div className="detail-grid">
         <section className="panel">

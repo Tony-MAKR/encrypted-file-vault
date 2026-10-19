@@ -5,15 +5,36 @@ from __future__ import annotations
 from rest_framework import serializers
 
 from apps.accounts.models import User
+from apps.accounts.serializers import validate_password_value
 
-from .models import VaultGroup, VaultItem
+from .models import VaultContent, VaultGroup, VaultItem
 from .services import (
     can_open_content,
     can_view_metadata,
     effective_users_for_item,
 )
 
-PLACEHOLDER_NOTICE = "本阶段为权限测试占位，真实内容将在第 4 阶段加入。"
+EMPTY_CONTENT_NOTICE = "这条条目还没有加密正文。"
+ENCRYPTED_CONTENT_NOTICE = "内容已加密保存；只有被授权的人可以查看。"
+
+
+def _content_of(item: VaultItem) -> VaultContent | None:
+    cached = getattr(item, "_vault_content_cache", None)
+    if cached is not None:
+        return cached
+    try:
+        content = item.content
+    except VaultContent.DoesNotExist:
+        content = None
+    item._vault_content_cache = content
+    return content
+
+
+def _has_content(item: VaultItem) -> bool:
+    annotated = getattr(item, "has_content", None)
+    if isinstance(annotated, bool):
+        return annotated
+    return _content_of(item) is not None
 
 
 class UserBriefSerializer(serializers.ModelSerializer):
@@ -82,6 +103,7 @@ class GroupDetailSerializer(GroupSerializer):
                 "item_type": item.item_type,
                 "item_type_label": item.get_item_type_display(),
                 "is_archived": item.is_archived,
+                "is_deleted": item.is_deleted,
                 "created_at": item.created_at,
             }
             for item in items
@@ -95,6 +117,9 @@ class ItemListSerializer(serializers.ModelSerializer):
     group_grant_count = serializers.SerializerMethodField()
     user_grant_count = serializers.SerializerMethodField()
     can_open_content = serializers.SerializerMethodField()
+    has_content = serializers.SerializerMethodField()
+    content_updated_at = serializers.SerializerMethodField()
+    content_size = serializers.SerializerMethodField()
 
     class Meta:
         model = VaultItem
@@ -107,10 +132,15 @@ class ItemListSerializer(serializers.ModelSerializer):
             "owner",
             "is_archived",
             "archived_at",
+            "is_deleted",
+            "deleted_at",
             "grant_count",
             "group_grant_count",
             "user_grant_count",
             "can_open_content",
+            "has_content",
+            "content_updated_at",
+            "content_size",
             "created_at",
             "updated_at",
         )
@@ -133,6 +163,17 @@ class ItemListSerializer(serializers.ModelSerializer):
     def get_can_open_content(self, obj: VaultItem) -> bool:
         request = self.context.get("request")
         return can_open_content(request.user if request else None, obj)
+
+    def get_has_content(self, obj: VaultItem) -> bool:
+        return _has_content(obj)
+
+    def get_content_updated_at(self, obj: VaultItem):
+        content = _content_of(obj)
+        return content.updated_at if content is not None else None
+
+    def get_content_size(self, obj: VaultItem) -> int:
+        content = _content_of(obj)
+        return content.plaintext_size if content is not None else 0
 
 
 class ItemDetailSerializer(ItemListSerializer):
@@ -196,10 +237,14 @@ class ItemDetailSerializer(ItemListSerializer):
         return effective_users_for_item(obj).count()
 
     def get_content_state(self, obj: VaultItem) -> str:
-        return "placeholder"
+        return "encrypted" if _has_content(obj) else "empty"
 
     def get_notice(self, obj: VaultItem) -> str:
-        return PLACEHOLDER_NOTICE
+        return (
+            ENCRYPTED_CONTENT_NOTICE
+            if _has_content(obj)
+            else EMPTY_CONTENT_NOTICE
+        )
 
 
 class MyItemSerializer(serializers.ModelSerializer):
@@ -209,6 +254,9 @@ class MyItemSerializer(serializers.ModelSerializer):
     item_type_label = serializers.SerializerMethodField()
     content_state = serializers.SerializerMethodField()
     notice = serializers.SerializerMethodField()
+    has_content = serializers.SerializerMethodField()
+    content_updated_at = serializers.SerializerMethodField()
+    content_size = serializers.SerializerMethodField()
 
     class Meta:
         model = VaultItem
@@ -221,6 +269,9 @@ class MyItemSerializer(serializers.ModelSerializer):
             "owner",
             "content_state",
             "notice",
+            "has_content",
+            "content_updated_at",
+            "content_size",
             "created_at",
             "updated_at",
         )
@@ -230,10 +281,25 @@ class MyItemSerializer(serializers.ModelSerializer):
         return obj.get_item_type_display()
 
     def get_content_state(self, obj: VaultItem) -> str:
-        return "placeholder"
+        return "encrypted" if _has_content(obj) else "empty"
 
     def get_notice(self, obj: VaultItem) -> str:
-        return PLACEHOLDER_NOTICE
+        return (
+            ENCRYPTED_CONTENT_NOTICE
+            if _has_content(obj)
+            else EMPTY_CONTENT_NOTICE
+        )
+
+    def get_has_content(self, obj: VaultItem) -> bool:
+        return _has_content(obj)
+
+    def get_content_updated_at(self, obj: VaultItem):
+        content = _content_of(obj)
+        return content.updated_at if content is not None else None
+
+    def get_content_size(self, obj: VaultItem) -> int:
+        content = _content_of(obj)
+        return content.plaintext_size if content is not None else 0
 
 
 def _validate_group_name(value: str, instance: VaultGroup | None = None) -> str:
@@ -340,3 +406,49 @@ class ItemUpdateSerializer(serializers.Serializer):
 
 class OwnerTransferSerializer(serializers.Serializer):
     owner_id = serializers.IntegerField(min_value=1)
+
+
+class TextContentWriteSerializer(serializers.Serializer):
+    url = serializers.CharField(
+        required=False, allow_blank=True, max_length=1000
+    )
+    username = serializers.CharField(
+        required=False, allow_blank=True, max_length=256
+    )
+    password = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=256,
+        trim_whitespace=False,
+    )
+    notes = serializers.CharField(
+        required=False, allow_blank=True, max_length=5000
+    )
+    clear_password = serializers.BooleanField(required=False, default=False)
+
+
+class VaultInitializeSerializer(serializers.Serializer):
+    master_password = serializers.CharField(
+        write_only=True, min_length=12, max_length=128, trim_whitespace=False
+    )
+    master_password_confirm = serializers.CharField(
+        write_only=True, min_length=12, max_length=128, trim_whitespace=False
+    )
+
+    def validate(self, attrs: dict) -> dict:
+        if attrs["master_password"] != attrs["master_password_confirm"]:
+            raise serializers.ValidationError(
+                {"master_password_confirm": "两次输入的主密码不一致。"}
+            )
+        request = self.context.get("request")
+        validate_password_value(
+            attrs["master_password"],
+            request.user if request else None,
+        )
+        return attrs
+
+
+class VaultUnlockSerializer(serializers.Serializer):
+    master_password = serializers.CharField(
+        write_only=True, max_length=128, trim_whitespace=False
+    )

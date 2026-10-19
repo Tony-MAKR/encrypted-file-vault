@@ -85,7 +85,7 @@ export function MyItemsPage() {
       </section>
 
       <div className="form-success page-banner" role="status">
-        本阶段只有标题、类型和说明等元数据；真实文件或加密文字将在第 4 阶段加入。
+        打开条目后，文字内容会按需解密，密码默认打码；文件需要点击下载并解密。未授权内容不会出现在列表中。
       </div>
 
       {error && (

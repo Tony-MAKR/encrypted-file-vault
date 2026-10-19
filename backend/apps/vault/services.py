@@ -42,7 +42,9 @@ def access_filter(user: User) -> Q:
 def accessible_items(user: User, include_archived: bool = False):
     """Items the user may open, without duplicates."""
 
-    queryset = VaultItem.objects.filter(access_filter(user))
+    queryset = VaultItem.objects.filter(is_deleted=False).filter(
+        access_filter(user)
+    )
     if not include_archived:
         queryset = queryset.filter(is_archived=False)
     return queryset.distinct()
@@ -56,6 +58,8 @@ def can_open_content(user: User | None, item: VaultItem) -> bool:
     """
 
     if not user or not user.is_authenticated or not user.is_active:
+        return False
+    if item.is_deleted:
         return False
     if item.owner_id == user.pk:
         return True

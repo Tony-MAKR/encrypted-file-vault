@@ -7,8 +7,24 @@ from django.core.cache import cache
 from django.test import Client
 
 from apps.accounts.models import User
+from apps.vault import crypto as vault_crypto
 from apps.vault.models import VaultGroup, VaultItem
 from tests.helpers import TEST_PASSWORD
+
+
+@pytest.fixture(autouse=True)
+def isolated_vault_storage(tmp_path, settings):
+    """Keep tests away from the real key and object directories."""
+
+    settings.VAULT_KEY_FILE = str(tmp_path / "keys" / "master.key.json")
+    settings.VAULT_OBJECTS_DIR = str(tmp_path / "vault" / "objects")
+    settings.VAULT_TMP_DIR = str(tmp_path / "vault" / "tmp")
+    settings.VAULT_KDF_TIME_COST = 1
+    settings.VAULT_KDF_MEMORY_COST = 8192
+    settings.VAULT_KDF_PARALLELISM = 1
+    vault_crypto.reset_state()
+    yield
+    vault_crypto.reset_state()
 
 
 @pytest.fixture(autouse=True)

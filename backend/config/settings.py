@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(PROJECT_ROOT / ".env")
 
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.4.0"
 
 
 def _get_bool(name: str, default: bool = False) -> bool:
@@ -67,9 +67,20 @@ if not DATA_DIR.is_absolute():
 DB_DIR = DATA_DIR / "db"
 LOG_DIR = DATA_DIR / "logs"
 VAULT_DIR = DATA_DIR / "vault"
+VAULT_OBJECTS_DIR = VAULT_DIR / "objects"
+VAULT_TMP_DIR = VAULT_DIR / "tmp"
+KEYS_DIR = DATA_DIR / "keys"
 BACKUP_DIR = DATA_DIR / "backups"
 
-for _directory in (DB_DIR, LOG_DIR, VAULT_DIR, BACKUP_DIR):
+for _directory in (
+    DB_DIR,
+    LOG_DIR,
+    VAULT_DIR,
+    VAULT_OBJECTS_DIR,
+    VAULT_TMP_DIR,
+    KEYS_DIR,
+    BACKUP_DIR,
+):
     _directory.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
@@ -196,6 +207,7 @@ CORS_ALLOWED_ORIGINS = _get_list(
 )
 CORS_ALLOWED_ORIGINS = list(dict.fromkeys(CORS_ALLOWED_ORIGINS))
 CORS_ALLOW_CREDENTIALS = True
+CORS_EXPOSE_HEADERS = ["Content-Disposition"]
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 # ---------------------------------------------------------------------------
@@ -228,6 +240,20 @@ LOGIN_LOCKOUT_MINUTES = _get_int("LOGIN_LOCKOUT_MINUTES", 15)
 
 # HSTS is enabled only after HTTPS is configured in a later stage.
 SECURE_HSTS_SECONDS = 0
+
+# ---------------------------------------------------------------------------
+# Vault encryption
+# ---------------------------------------------------------------------------
+# The master key file contains only a wrapped master key. The master password
+# is never stored. Tests override these paths with a temporary directory.
+VAULT_KEY_FILE = KEYS_DIR / "master.key.json"
+VAULT_MAX_FILE_SIZE_MB = _get_int("VAULT_MAX_FILE_SIZE_MB", 200)
+VAULT_MAX_FILE_SIZE_BYTES = VAULT_MAX_FILE_SIZE_MB * 1024 * 1024
+VAULT_TRASH_RETENTION_DAYS = _get_int("VAULT_TRASH_RETENTION_DAYS", 30)
+VAULT_CHUNK_SIZE = 1024 * 1024
+VAULT_KDF_TIME_COST = _get_int("VAULT_KDF_TIME_COST", 3)
+VAULT_KDF_MEMORY_COST = _get_int("VAULT_KDF_MEMORY_COST", 65536)
+VAULT_KDF_PARALLELISM = _get_int("VAULT_KDF_PARALLELISM", 4)
 
 # ---------------------------------------------------------------------------
 # Internationalization and static files

@@ -119,6 +119,18 @@ class VaultItem(models.Model):
     archived_at = models.DateTimeField(
         null=True, blank=True, verbose_name="归档时间"
     )
+    is_deleted = models.BooleanField(default=False, verbose_name="在回收站")
+    deleted_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="删除时间"
+    )
+    deleted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name="删除操作人",
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
 
@@ -127,6 +139,7 @@ class VaultItem(models.Model):
         indexes = [
             models.Index(fields=["owner", "is_archived"], name="idx_item_owner_state"),
             models.Index(fields=["is_archived"], name="idx_item_archived"),
+            models.Index(fields=["is_deleted"], name="idx_item_deleted"),
         ]
         verbose_name = "内容条目"
         verbose_name_plural = "内容条目"
@@ -140,6 +153,67 @@ class VaultItem(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+
+class VaultContent(models.Model):
+    """Encrypted content attached to one item.
+
+    Only ciphertext, wrapped data keys and non-secret size/hash fields live in
+    the database. Text payloads are small and stored in ``encrypted_payload``;
+    file payloads live in opaque blobs under ``VAULT_OBJECTS_DIR``.
+    """
+
+    item = models.OneToOneField(
+        VaultItem,
+        on_delete=models.CASCADE,
+        related_name="content",
+        verbose_name="内容条目",
+    )
+    content_type = models.CharField(
+        max_length=8,
+        choices=VaultItem.ItemType.choices,
+        verbose_name="内容类型",
+    )
+    encryption_version = models.PositiveSmallIntegerField(
+        default=1, verbose_name="加密格式版本"
+    )
+    key_version = models.PositiveSmallIntegerField(
+        default=1, verbose_name="主钥匙版本"
+    )
+    wrapped_dek = models.BinaryField(verbose_name="加密后的数据钥匙")
+    dek_nonce = models.BinaryField(verbose_name="数据钥匙加密随机数")
+    payload_nonce = models.BinaryField(
+        null=True, blank=True, verbose_name="文字内容加密随机数"
+    )
+    encrypted_payload = models.BinaryField(
+        null=True, blank=True, verbose_name="文字内容密文"
+    )
+    blob_path = models.CharField(
+        max_length=255, blank=True, default="", verbose_name="文件密文相对路径"
+    )
+    ciphertext_size = models.BigIntegerField(default=0, verbose_name="密文大小")
+    plaintext_size = models.BigIntegerField(default=0, verbose_name="原始大小")
+    plaintext_sha256 = models.BinaryField(verbose_name="原始内容校验值")
+    encrypted_metadata = models.BinaryField(verbose_name="加密的文件信息")
+    metadata_nonce = models.BinaryField(verbose_name="文件信息加密随机数")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name="内容创建人",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+
+    class Meta:
+        ordering = ["-updated_at", "-id"]
+        verbose_name = "加密内容"
+        verbose_name_plural = "加密内容"
+
+    def __str__(self) -> str:
+        return f"{self.item.title}（{self.get_content_type_display()}）"
 
 
 class GroupGrant(models.Model):

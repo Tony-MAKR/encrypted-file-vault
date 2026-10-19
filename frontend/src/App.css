@@ -1104,6 +1104,91 @@
   gap: 10px;
 }
 
+/* Stage 4: vault unlock and encrypted content */
+.vault-unlocked {
+  display: grid;
+  gap: 22px;
+}
+
+.vault-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--success-border);
+  border-radius: 12px;
+  background: var(--success-bg);
+  color: var(--success);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.vault-warning {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--warning-border);
+  border-radius: 12px;
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.vault-warning p {
+  margin: 6px 0 0;
+  color: var(--warning);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.checkbox-row input[type='checkbox'] {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+
+.field input[type='file'] {
+  padding: 10px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 12px;
+  background: var(--subtle);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.password-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.secret-value {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.file-download-box {
+  display: grid;
+  gap: 8px;
+}
+
+.file-download-box p {
+  margin: 0;
+}
+
 @media (max-width: 860px) {
   .detail-grid,
   .grant-grid {

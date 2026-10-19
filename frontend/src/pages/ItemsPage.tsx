@@ -14,6 +14,8 @@ import { TextareaField } from '../components/TextareaField'
 
 const PAGE_SIZE = 20
 
+type DeletedFilter = 'active' | 'only' | 'all'
+
 const EMPTY_FORM: ItemPayload = {
   title: '',
   item_type: 'text',
@@ -44,8 +46,11 @@ export function ItemsPage() {
   const [query, setQuery] = useState('')
   const [itemType, setItemType] = useState('')
   const [archived, setArchived] = useState<ArchivedFilter>('active')
+  const [deleted, setDeleted] = useState<DeletedFilter>('active')
   const [loading, setLoading] = useState(true)
   const [listError, setListError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [busyId, setBusyId] = useState<number | null>(null)
 
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState<ItemPayload>(EMPTY_FORM)
@@ -58,6 +63,7 @@ export function ItemsPage() {
       targetQuery: string,
       targetType: string,
       targetArchived: ArchivedFilter,
+      targetDeleted: DeletedFilter,
     ) => {
       setLoading(true)
       setListError('')
@@ -66,7 +72,8 @@ export function ItemsPage() {
           page: targetPage,
           q: targetQuery,
           itemType: targetType,
-          archived: targetArchived,
+          archived: targetDeleted === 'active' ? targetArchived : 'all',
+          deleted: targetDeleted,
           pageSize: PAGE_SIZE,
         })
         const totalPages = Math.max(1, Math.ceil(data.count / PAGE_SIZE))
@@ -88,8 +95,8 @@ export function ItemsPage() {
   useEffect(() => {
     // loadItems updates state after its async request resolves.
     // oxlint-disable-next-line react/set-state-in-effect
-    void loadItems(page, query, itemType, archived)
-  }, [loadItems, page, query, itemType, archived])
+    void loadItems(page, query, itemType, archived, deleted)
+  }, [loadItems, page, query, itemType, archived, deleted])
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -117,6 +124,28 @@ export function ItemsPage() {
     }
   }
 
+  const restoreItem = async (item: VaultItemSummary) => {
+    if (
+      !window.confirm(
+        `确定恢复“${item.title}”吗？恢复后，被授权的普通用户会重新看到这条内容。`,
+      )
+    ) {
+      return
+    }
+    setBusyId(item.id)
+    setNotice('')
+    setListError('')
+    try {
+      await adminApi.restoreItem(item.id)
+      setNotice(`“${item.title}”已从回收站恢复。`)
+      await loadItems(page, query, itemType, archived, deleted)
+    } catch (error) {
+      setListError(messageOf(error))
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   return (
@@ -126,8 +155,7 @@ export function ItemsPage() {
           <p className="eyebrow">管理员工具</p>
           <h1>内容条目</h1>
           <p className="lede">
-            本阶段只保存标题、类型、说明和授权，作为权限测试占位。真实文件和加密文字将在第
-            4 阶段加入。
+            先创建条目，再在详情页添加加密文字或上传加密文件。标题和说明不加密，正文加密保存。
           </p>
         </div>
         <button
@@ -138,14 +166,15 @@ export function ItemsPage() {
             setCreateError('')
           }}
         >
-          {showCreate ? '收起新建表单' : '新建占位条目'}
+          {showCreate ? '收起新建表单' : '新建条目'}
         </button>
       </section>
 
-      <div className="form-success page-banner" role="status">
-        占位提示：请不要在这里填写真实密码或上传真实文件；本阶段没有内容输入框。
-      </div>
-
+      {notice && (
+        <div className="form-success page-banner" role="status">
+          {notice}
+        </div>
+      )}
       {listError && (
         <div className="form-error page-banner" role="alert">
           {listError}
@@ -156,7 +185,7 @@ export function ItemsPage() {
         <section className="panel create-panel">
           <div className="panel-heading">
             <div>
-              <h2>新建占位条目</h2>
+              <h2>新建条目</h2>
               <p>创建者自动成为所有者；类型创建后不能修改。</p>
             </div>
           </div>
@@ -180,7 +209,7 @@ export function ItemsPage() {
                 }))
               }
               maxLength={120}
-              placeholder="例如：生产数据库密码（占位）"
+              placeholder="例如：生产数据库密码"
               autoComplete="off"
               required
             />
@@ -199,7 +228,7 @@ export function ItemsPage() {
                 <option value="text">文字</option>
                 <option value="file">文件</option>
               </select>
-              <p className="field-hint">类型只用于分类，本阶段都不保存真实内容。</p>
+              <p className="field-hint">文字条目填写网址/账号/密码；文件条目上传文件。</p>
             </div>
             <TextareaField
               label="说明"
@@ -286,10 +315,27 @@ export function ItemsPage() {
                 setArchived(event.target.value as ArchivedFilter)
                 setPage(1)
               }}
+              disabled={deleted !== 'active'}
             >
               <option value="active">活跃条目</option>
               <option value="archived">已归档</option>
               <option value="all">全部状态</option>
+            </select>
+            <select
+              aria-label="按回收站状态筛选"
+              value={deleted}
+              onChange={(event) => {
+                const next = event.target.value as DeletedFilter
+                setDeleted(next)
+                if (next !== 'active') {
+                  setArchived('all')
+                }
+                setPage(1)
+              }}
+            >
+              <option value="active">不含回收站</option>
+              <option value="only">只看回收站</option>
+              <option value="all">全部（含回收站）</option>
             </select>
             <span className="table-count">共 {total} 条</span>
           </div>
@@ -332,20 +378,46 @@ export function ItemsPage() {
                       组 {item.group_grant_count} / 人 {item.user_grant_count}
                     </td>
                     <td>
-                      {item.is_archived ? (
-                        <span className="status-pill status-off">已归档</span>
-                      ) : (
-                        <span className="status-pill status-on">活跃</span>
-                      )}
+                      <div className="status-stack">
+                        {item.is_deleted ? (
+                          <span className="status-pill status-off">
+                            回收站
+                          </span>
+                        ) : item.is_archived ? (
+                          <span className="status-pill status-off">
+                            已归档
+                          </span>
+                        ) : (
+                          <span className="status-pill status-on">活跃</span>
+                        )}
+                        <span
+                          className={`status-pill ${
+                            item.has_content ? 'status-on' : 'status-pending'
+                          }`}
+                        >
+                          {item.has_content ? '已加密' : '未添加内容'}
+                        </span>
+                      </div>
                     </td>
                     <td className="date-cell">{formatDate(item.updated_at)}</td>
                     <td>
-                      <Link
-                        className="small-button button-link"
-                        to={`/admin/items/${item.id}`}
-                      >
-                        打开授权面板
-                      </Link>
+                      {item.is_deleted ? (
+                        <button
+                          className="small-button small-button-accent"
+                          type="button"
+                          onClick={() => void restoreItem(item)}
+                          disabled={busyId === item.id}
+                        >
+                          {busyId === item.id ? '正在恢复…' : '恢复'}
+                        </button>
+                      ) : (
+                        <Link
+                          className="small-button button-link"
+                          to={`/admin/items/${item.id}`}
+                        >
+                          打开内容与授权
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Exists, OuterRef, Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -17,7 +17,15 @@ from rest_framework.response import Response
 from apps.accounts.models import User
 from apps.accounts.permissions import IsAdminRole
 
-from .models import GroupGrant, GroupMembership, UserGrant, VaultGroup, VaultItem
+from .content_services import maybe_purge_expired_items
+from .models import (
+    GroupGrant,
+    GroupMembership,
+    UserGrant,
+    VaultContent,
+    VaultGroup,
+    VaultItem,
+)
 from .pagination import VaultPagination
 from .serializers import (
     GroupCreateSerializer,
@@ -49,13 +57,23 @@ def _group_with_related(group_id: int) -> VaultGroup:
 
 def _item_with_related(item_id: int) -> VaultItem:
     return get_object_or_404(
-        VaultItem.objects.select_related("owner").prefetch_related(
+        VaultItem.objects.select_related("owner", "content").prefetch_related(
             "group_grants__group",
             "group_grants__granted_by",
             "user_grants__user",
             "user_grants__granted_by",
         ),
         pk=item_id,
+    )
+
+
+def _deleted_error() -> Response:
+    return Response(
+        {
+            "detail": "这条条目在回收站中，请先恢复后再操作。",
+            "code": "item_deleted",
+        },
+        status=status.HTTP_400_BAD_REQUEST,
     )
 
 
@@ -272,10 +290,20 @@ def _apply_archived_filter(queryset, request):
     return queryset.filter(is_archived=False)
 
 
+def _apply_deleted_filter(queryset, request):
+    value = (request.query_params.get("deleted") or "active").strip().lower()
+    if value == "all":
+        return queryset
+    if value in {"true", "1", "yes", "only", "deleted", "trash"}:
+        return queryset.filter(is_deleted=True)
+    return queryset.filter(is_deleted=False)
+
+
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated, IsAdminRole])
 def admin_items(request):
     if request.method == "GET":
+        maybe_purge_expired_items()
         search = (request.query_params.get("q") or "").strip()[:50]
         item_type = (request.query_params.get("item_type") or "").strip()
         queryset = (
@@ -283,6 +311,9 @@ def admin_items(request):
             .annotate(
                 group_grant_count=Count("group_grants", distinct=True),
                 user_grant_count=Count("user_grants", distinct=True),
+                has_content=Exists(
+                    VaultContent.objects.filter(item_id=OuterRef("pk"))
+                ),
             )
             .order_by("-created_at", "-id")
         )
@@ -292,6 +323,7 @@ def admin_items(request):
             )
         if item_type in VaultItem.ItemType.values:
             queryset = queryset.filter(item_type=item_type)
+        queryset = _apply_deleted_filter(queryset, request)
         queryset = _apply_archived_filter(queryset, request)
 
         paginator = VaultPagination()
@@ -338,6 +370,9 @@ def admin_item_detail(request, item_id: int):
             ).data
         )
 
+    if item.is_deleted:
+        return _deleted_error()
+
     serializer = ItemUpdateSerializer(data=request.data, partial=True)
     serializer.is_valid(raise_exception=True)
     for field, value in serializer.validated_data.items():
@@ -362,6 +397,8 @@ def admin_item_detail(request, item_id: int):
 @permission_classes([IsAuthenticated, IsAdminRole])
 def admin_item_archive(request, item_id: int):
     item = get_object_or_404(VaultItem, pk=item_id)
+    if item.is_deleted:
+        return _deleted_error()
     if not item.is_archived:
         item.is_archived = True
         item.archived_at = timezone.now()
@@ -382,6 +419,8 @@ def admin_item_archive(request, item_id: int):
 @permission_classes([IsAuthenticated, IsAdminRole])
 def admin_item_unarchive(request, item_id: int):
     item = get_object_or_404(VaultItem, pk=item_id)
+    if item.is_deleted:
+        return _deleted_error()
     if item.is_archived:
         item.is_archived = False
         item.archived_at = None
@@ -402,6 +441,8 @@ def admin_item_unarchive(request, item_id: int):
 @permission_classes([IsAuthenticated, IsAdminRole])
 def admin_item_owner(request, item_id: int):
     item = get_object_or_404(VaultItem.objects.select_related("owner"), pk=item_id)
+    if item.is_deleted:
+        return _deleted_error()
     serializer = OwnerTransferSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     owner_id = serializer.validated_data["owner_id"]
@@ -444,6 +485,8 @@ def admin_item_owner(request, item_id: int):
 @permission_classes([IsAuthenticated, IsAdminRole])
 def admin_item_group_grants(request, item_id: int):
     item = get_object_or_404(VaultItem, pk=item_id)
+    if item.is_deleted:
+        return _deleted_error()
     serializer = GroupIdsSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     group_ids = serializer.validated_data["group_ids"]
@@ -511,6 +554,8 @@ def admin_item_group_grant_detail(request, item_id: int, group_id: int):
 @permission_classes([IsAuthenticated, IsAdminRole])
 def admin_item_user_grants(request, item_id: int):
     item = get_object_or_404(VaultItem, pk=item_id)
+    if item.is_deleted:
+        return _deleted_error()
     serializer = UserIdsSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user_ids = serializer.validated_data["user_ids"]

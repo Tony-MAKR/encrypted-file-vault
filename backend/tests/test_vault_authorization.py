@@ -31,11 +31,11 @@ def test_admin_creates_placeholder_item(admin_client, admin_user):
     assert data["title"] == "网站管理后台"
     assert data["description"] == "账号信息占位"
     assert data["owner"]["id"] == admin_user.pk
-    assert data["content_state"] == "placeholder"
+    assert data["content_state"] == "empty"
     assert data["can_open_content"] is True
     assert data["grant_count"] == 0
     assert data["effective_user_count"] == 1
-    assert "第 4 阶段" in data["notice"]
+    assert "还没有" in data["notice"]
 
 
 @pytest.mark.django_db
@@ -101,7 +101,7 @@ def test_group_grant_gives_only_group_members_access(
 
     member_detail = user_client.get(f"/api/v1/items/{vault_item.pk}/")
     assert member_detail.status_code == 200
-    assert member_detail.json()["content_state"] == "placeholder"
+    assert member_detail.json()["content_state"] == "empty"
 
     assert other_client.get("/api/v1/items/").json()["count"] == 0
     assert (

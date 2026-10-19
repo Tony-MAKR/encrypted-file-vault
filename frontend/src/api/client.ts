@@ -66,6 +66,7 @@ export interface GroupGrantedItem {
   item_type: VaultItemType
   item_type_label: string
   is_archived: boolean
+  is_deleted: boolean
   created_at: string
 }
 
@@ -83,10 +84,15 @@ export interface VaultItemSummary {
   owner: UserBrief
   is_archived: boolean
   archived_at: string | null
+  is_deleted: boolean
+  deleted_at: string | null
   grant_count: number
   group_grant_count: number
   user_grant_count: number
   can_open_content: boolean
+  has_content: boolean
+  content_updated_at: string | null
+  content_size: number
   created_at: string
   updated_at: string
 }
@@ -126,10 +132,39 @@ export interface MyVaultItem {
   item_type_label: string
   description: string
   owner: UserBrief
-  content_state: 'placeholder'
+  content_state: 'empty' | 'encrypted'
   notice: string
+  has_content: boolean
+  content_updated_at: string | null
+  content_size: number
   created_at: string
   updated_at: string
+}
+
+export interface VaultStatus {
+  initialized: boolean
+  unlocked: boolean
+}
+
+export interface SafeTextContent {
+  url: string
+  username: string
+  notes: string
+  has_password: boolean
+  updated_at: string
+}
+
+export interface TextContentPayload {
+  url?: string
+  username?: string
+  password?: string
+  notes?: string
+  clear_password?: boolean
+}
+
+export interface DownloadedFile {
+  blob: Blob
+  filename: string
 }
 
 export interface GroupPayload {
@@ -167,6 +202,9 @@ const FIELD_LABELS: Record<string, string> = {
   description: '说明',
   title: '标题',
   item_type: '类型',
+  master_password: '主密码',
+  master_password_confirm: '确认主密码',
+  file: '文件',
   group_id: '用户组',
   group_ids: '用户组',
   user_id: '用户',
@@ -245,6 +283,53 @@ export async function primeCsrfToken(): Promise<void> {
   await ensureCsrfToken()
 }
 
+function filenameFromDisposition(header: string | null): string {
+  if (!header) {
+    return 'download'
+  }
+  const encoded = /filename\*=UTF-8''([^;]+)/i.exec(header)
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded[1])
+    } catch {
+      // Fall through to the plain filename form.
+    }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(header)
+  return plain?.[1] ?? 'download'
+}
+
+async function apiDownload(path: string): Promise<DownloadedFile> {
+  let response: Response
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      headers: { Accept: '*/*' },
+      credentials: 'include',
+    })
+  } catch {
+    throw new ApiError(0, { detail: '无法连接后端，请确认服务已启动。' })
+  }
+
+  if (response.status === 401) {
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
+  }
+
+  if (!response.ok) {
+    const contentType = response.headers.get('content-type') ?? ''
+    const data: unknown = contentType.includes('application/json')
+      ? await response.json()
+      : await response.text()
+    throw new ApiError(response.status, data)
+  }
+
+  return {
+    blob: await response.blob(),
+    filename: filenameFromDisposition(
+      response.headers.get('content-disposition'),
+    ),
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
@@ -253,7 +338,11 @@ export async function apiFetch<T>(
   const headers = new Headers(options.headers)
   headers.set('Accept', 'application/json')
 
-  if (options.body && !headers.has('Content-Type')) {
+  if (
+    options.body &&
+    !(options.body instanceof FormData) &&
+    !headers.has('Content-Type')
+  ) {
     headers.set('Content-Type', 'application/json')
   }
 
@@ -441,12 +530,14 @@ export const adminApi = {
     q = '',
     itemType = '',
     archived = 'active',
+    deleted = 'active',
     pageSize = 20,
   }: {
     page?: number
     q?: string
     itemType?: string
     archived?: ArchivedFilter
+    deleted?: 'active' | 'only' | 'all'
     pageSize?: number
   } = {}) => {
     const params = new URLSearchParams({
@@ -454,6 +545,7 @@ export const adminApi = {
       page_size: String(pageSize),
       q,
       archived,
+      deleted,
     })
     if (itemType) {
       params.set('item_type', itemType)
@@ -519,9 +611,78 @@ export const adminApi = {
     apiFetch<void>(`/api/v1/admin/items/${itemId}/grants/users/${userId}/`, {
       method: 'DELETE',
     }),
+
+  saveTextContent: (itemId: number, payload: TextContentPayload) =>
+    apiFetch<VaultItemDetail>(
+      `/api/v1/admin/items/${itemId}/content/text/`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      },
+    ),
+
+  uploadFileContent: (itemId: number, file: File) => {
+    const body = new FormData()
+    body.append('file', file)
+    return apiFetch<VaultItemDetail>(
+      `/api/v1/admin/items/${itemId}/content/file/`,
+      { method: 'POST', body },
+    )
+  },
+
+  trashItem: (itemId: number) =>
+    apiFetch<VaultItemDetail>(`/api/v1/admin/items/${itemId}/trash/`, {
+      method: 'POST',
+    }),
+
+  restoreItem: (itemId: number) =>
+    apiFetch<VaultItemDetail>(`/api/v1/admin/items/${itemId}/restore/`, {
+      method: 'POST',
+    }),
 }
 
 export const vaultApi = {
+  status: () => apiFetch<VaultStatus>('/api/v1/vault/status/'),
+
+  initialize: (masterPassword: string, confirm: string) =>
+    apiFetch<VaultStatus>('/api/v1/vault/initialize/', {
+      method: 'POST',
+      body: JSON.stringify({
+        master_password: masterPassword,
+        master_password_confirm: confirm,
+      }),
+    }),
+
+  unlock: (masterPassword: string) =>
+    apiFetch<VaultStatus>('/api/v1/vault/unlock/', {
+      method: 'POST',
+      body: JSON.stringify({ master_password: masterPassword }),
+    }),
+
+  lock: () =>
+    apiFetch<VaultStatus>('/api/v1/vault/lock/', {
+      method: 'POST',
+    }),
+
+  getTextContent: (itemId: number) =>
+    apiFetch<SafeTextContent>(
+      `/api/v1/items/${itemId}/content/text/`,
+    ),
+
+  revealPassword: (itemId: number) =>
+    apiFetch<{ password: string }>(
+      `/api/v1/items/${itemId}/content/text/reveal/`,
+      { method: 'POST' },
+    ),
+
+  auditCopy: (itemId: number) =>
+    apiFetch<void>(`/api/v1/items/${itemId}/content/text/copy-audit/`, {
+      method: 'POST',
+    }),
+
+  downloadFile: (itemId: number) =>
+    apiDownload(`/api/v1/items/${itemId}/content/file/`),
+
   listMyItems: ({
     page = 1,
     q = '',

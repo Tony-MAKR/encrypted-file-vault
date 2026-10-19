@@ -6,6 +6,8 @@ import {
   type MyVaultItem,
 } from '../api/client'
 import { AppShell } from '../components/AppShell'
+import { UserContentSection } from '../components/UserContentSection'
+import { VaultGate } from '../components/VaultGate'
 
 function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : '加载失败，请稍后再试。'
@@ -99,13 +101,9 @@ export function MyItemDetailPage() {
         </div>
       </section>
 
-      <section className="panel notice-panel">
-        <h2>内容尚未加入</h2>
-        <p>{item.notice}</p>
-        <p>
-          本阶段只验证“谁可以看到哪条内容”的权限规则，系统中没有保存真实文件或密码。请暂时不要把真实敏感资料放到当前版本。
-        </p>
-      </section>
+      <VaultGate>
+        <UserContentSection item={item} />
+      </VaultGate>
 
       <section className="panel">
         <div className="panel-heading">

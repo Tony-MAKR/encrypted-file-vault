@@ -27,14 +27,14 @@ export function DashboardPage() {
   return (
     <AppShell active="dashboard">
       <section className="dashboard-hero">
-        <p className="eyebrow">第 3 阶段 · 用户组与授权</p>
+        <p className="eyebrow">第 4 阶段 · 加密存储</p>
         <h1>欢迎回来，{user.display_name}</h1>
         <p className="lede">
-          现在可以按用户组或个人授权内容了。系统会在后端检查每一次访问；撤销授权或移出组会立即生效。
+          文件和文字秘密现在会在写入磁盘前加密。被授权的人可以查看或下载；未授权的人拿不到正文。
         </p>
         <div className="tag-row">
           <span className="role-badge">{roleLabel}</span>
-          <span className="stage-badge">第 3 阶段 / 共 9 个阶段</span>
+          <span className="stage-badge">第 4 阶段 / 共 9 个阶段</span>
         </div>
       </section>
 
@@ -65,13 +65,14 @@ export function DashboardPage() {
       <section className="panel notice-panel">
         <h2>这一阶段能做什么</h2>
         <ul>
-          <li>管理员可以创建用户组、添加或移出成员。</li>
-          <li>管理员可以创建标题、类型和说明等占位条目，并按组或个人授权。</li>
-          <li>普通用户只能看到被授权的条目标题和说明；直接访问未授权地址会显示找不到。</li>
-          <li>撤销授权、移出组、停用账号都会在下一次请求立即生效。</li>
+          <li>管理员可以给文字条目添加网址、账号、密码和秘密备注，保存前加密。</li>
+          <li>管理员可以上传文件；文件边接收边加密，磁盘上没有明文和原始文件名。</li>
+          <li>被授权用户可以查看文字、显示/复制密码，或下载解密后的文件。</li>
+          <li>服务器重启后保险箱会锁定，管理员需要输入主密码重新解锁。</li>
+          <li>删除进 30 天回收站，可恢复；到期自动清理。</li>
         </ul>
         <p>
-          真实文件上传、加密、解密和下载还没有加入。本阶段的条目只是权限测试占位，请先不要放真实敏感资料。
+          主密码不是登录密码，丢失后所有加密内容无法恢复。请离线保存主密码；加密备份界面将在第 7 阶段加入。
         </p>
       </section>
 
@@ -79,7 +80,7 @@ export function DashboardPage() {
         <section className="panel admin-callout">
           <div>
             <h2>用户组与内容条目</h2>
-            <p>先建组和成员，再创建占位条目并配置授权。</p>
+            <p>先建组和成员，再创建条目、添加加密内容并配置授权。</p>
           </div>
           <div className="callout-actions">
             <Link className="primary-link" to="/admin/groups">
