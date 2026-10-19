@@ -6,3 +6,8 @@ from rest_framework.throttling import UserRateThrottle
 class VaultUnlockThrottle(UserRateThrottle):
     scope = "vault_unlock"
     rate = "5/min"
+
+
+class VaultPurgeThrottle(UserRateThrottle):
+    scope = "vault_purge"
+    rate = "5/min"

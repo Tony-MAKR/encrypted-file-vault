@@ -109,6 +109,23 @@ class VaultItem(models.Model):
     description = models.TextField(
         max_length=1000, blank=True, default="", verbose_name="说明"
     )
+    category = models.CharField(
+        max_length=50,
+        blank=True,
+        default="",
+        db_index=True,
+        verbose_name="分类",
+    )
+    tags = models.JSONField(default=list, blank=True, verbose_name="标签")
+    # Derived from tags for simple, portable partial search on SQLite. It is
+    # never exposed through the API directly.
+    tags_text = models.CharField(
+        max_length=700,
+        blank=True,
+        default="",
+        editable=False,
+        verbose_name="标签搜索文本",
+    )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -149,6 +166,22 @@ class VaultItem(models.Model):
             self.title = self.title.strip()
         if isinstance(self.description, str):
             self.description = self.description.strip()
+        if isinstance(self.category, str):
+            self.category = self.category.strip()
+        if isinstance(self.tags, list):
+            normalized: list[str] = []
+            for value in self.tags:
+                if not isinstance(value, str):
+                    continue
+                tag = value.strip()
+                if tag and tag not in normalized:
+                    normalized.append(tag[:30])
+            self.tags = normalized[:20]
+            self.tags_text = (
+                "\x1f" + "\x1f".join(self.tags) + "\x1f"
+                if self.tags
+                else ""
+            )
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:

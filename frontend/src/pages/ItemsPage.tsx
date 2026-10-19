@@ -4,12 +4,15 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   adminApi,
   type ArchivedFilter,
+  type ItemOptions,
   type ItemPayload,
   type VaultItemSummary,
   type VaultItemType,
 } from '../api/client'
 import { AppShell } from '../components/AppShell'
 import { FormField } from '../components/FormField'
+import { PurgeDialog } from '../components/PurgeDialog'
+import { TagsInput } from '../components/TagsInput'
 import { TextareaField } from '../components/TextareaField'
 
 const PAGE_SIZE = 20
@@ -20,6 +23,8 @@ const EMPTY_FORM: ItemPayload = {
   title: '',
   item_type: 'text',
   description: '',
+  category: '',
+  tags: [],
 }
 
 function messageOf(error: unknown): string {
@@ -45,12 +50,19 @@ export function ItemsPage() {
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
   const [itemType, setItemType] = useState('')
+  const [category, setCategory] = useState('')
+  const [tag, setTag] = useState('')
   const [archived, setArchived] = useState<ArchivedFilter>('active')
   const [deleted, setDeleted] = useState<DeletedFilter>('active')
   const [loading, setLoading] = useState(true)
   const [listError, setListError] = useState('')
   const [notice, setNotice] = useState('')
   const [busyId, setBusyId] = useState<number | null>(null)
+  const [itemOptions, setItemOptions] = useState<ItemOptions>({
+    categories: [],
+    tags: [],
+  })
+  const [purgeTarget, setPurgeTarget] = useState<VaultItemSummary | null>(null)
 
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState<ItemPayload>(EMPTY_FORM)
@@ -62,6 +74,8 @@ export function ItemsPage() {
       targetPage: number,
       targetQuery: string,
       targetType: string,
+      targetCategory: string,
+      targetTag: string,
       targetArchived: ArchivedFilter,
       targetDeleted: DeletedFilter,
     ) => {
@@ -72,6 +86,8 @@ export function ItemsPage() {
           page: targetPage,
           q: targetQuery,
           itemType: targetType,
+          category: targetCategory,
+          tag: targetTag,
           archived: targetDeleted === 'active' ? targetArchived : 'all',
           deleted: targetDeleted,
           pageSize: PAGE_SIZE,
@@ -95,8 +111,15 @@ export function ItemsPage() {
   useEffect(() => {
     // loadItems updates state after its async request resolves.
     // oxlint-disable-next-line react/set-state-in-effect
-    void loadItems(page, query, itemType, archived, deleted)
-  }, [loadItems, page, query, itemType, archived, deleted])
+    void loadItems(page, query, itemType, category, tag, archived, deleted)
+  }, [loadItems, page, query, itemType, category, tag, archived, deleted])
+
+  useEffect(() => {
+    adminApi
+      .itemOptions()
+      .then(setItemOptions)
+      .catch(() => setItemOptions({ categories: [], tags: [] }))
+  }, [])
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -113,6 +136,8 @@ export function ItemsPage() {
         title: form.title.trim(),
         item_type: form.item_type,
         description: form.description.trim(),
+        category: (form.category ?? '').trim(),
+        tags: form.tags ?? [],
       })
       setForm(EMPTY_FORM)
       setShowCreate(false)
@@ -138,12 +163,34 @@ export function ItemsPage() {
     try {
       await adminApi.restoreItem(item.id)
       setNotice(`“${item.title}”已从回收站恢复。`)
-      await loadItems(page, query, itemType, archived, deleted)
+      await loadItems(page, query, itemType, category, tag, archived, deleted)
     } catch (error) {
       setListError(messageOf(error))
     } finally {
       setBusyId(null)
     }
+  }
+
+  const handlePurged = async () => {
+    setPurgeTarget(null)
+    setNotice('条目已永久删除。')
+    await loadItems(page, query, itemType, category, tag, archived, deleted)
+  }
+
+  const hasFilters =
+    Boolean(itemType || category || tag || query) ||
+    archived !== 'active' ||
+    deleted !== 'active'
+
+  const clearFilters = () => {
+    setSearchInput('')
+    setQuery('')
+    setItemType('')
+    setCategory('')
+    setTag('')
+    setArchived('active')
+    setDeleted('active')
+    setPage(1)
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -243,6 +290,35 @@ export function ItemsPage() {
               maxLength={1000}
               rows={3}
               placeholder="这条内容是做什么的，方便以后识别"
+              hint="说明是明文管理信息，不要写密码或秘密细节。"
+            />
+            <FormField
+              label="分类"
+              name="item_category"
+              value={form.category ?? ''}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  category: event.target.value,
+                }))
+              }
+              maxLength={50}
+              list="create-category-options"
+              placeholder="例如：财务资料"
+              hint="分类是明文，用于筛选；不要写密码。"
+            />
+            <datalist id="create-category-options">
+              {itemOptions.categories.map((option) => (
+                <option value={option} key={option} />
+              ))}
+            </datalist>
+            <TagsInput
+              label="标签"
+              value={form.tags ?? []}
+              onChange={(tags) =>
+                setForm((current) => ({ ...current, tags }))
+              }
+              hint="标签是明文，用于筛选；不要写密码或敏感细节。"
             />
             <div className="form-actions form-span-all">
               <button
@@ -309,6 +385,36 @@ export function ItemsPage() {
               <option value="file">文件</option>
             </select>
             <select
+              aria-label="按分类筛选"
+              value={category}
+              onChange={(event) => {
+                setCategory(event.target.value)
+                setPage(1)
+              }}
+            >
+              <option value="">全部分类</option>
+              {itemOptions.categories.map((option) => (
+                <option value={option} key={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="按标签筛选"
+              value={tag}
+              onChange={(event) => {
+                setTag(event.target.value)
+                setPage(1)
+              }}
+            >
+              <option value="">全部标签</option>
+              {itemOptions.tags.map((option) => (
+                <option value={option} key={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <select
               aria-label="按归档状态筛选"
               value={archived}
               onChange={(event) => {
@@ -337,6 +443,15 @@ export function ItemsPage() {
               <option value="only">只看回收站</option>
               <option value="all">全部（含回收站）</option>
             </select>
+            {hasFilters && (
+              <button
+                className="ghost-button"
+                type="button"
+                onClick={clearFilters}
+              >
+                清除筛选
+              </button>
+            )}
             <span className="table-count">共 {total} 条</span>
           </div>
         </div>
@@ -352,6 +467,7 @@ export function ItemsPage() {
                 <tr>
                   <th>标题</th>
                   <th>类型</th>
+                  <th>分类 / 标签</th>
                   <th>所有者</th>
                   <th>授权</th>
                   <th>状态</th>
@@ -372,6 +488,24 @@ export function ItemsPage() {
                     </td>
                     <td>
                       <span className="role-badge">{item.item_type_label}</span>
+                    </td>
+                    <td>
+                      <div className="category-cell">
+                        <span>
+                          {item.category || (
+                            <span className="muted-text">未分类</span>
+                          )}
+                        </span>
+                        {item.tags.length > 0 && (
+                          <div className="tag-row compact">
+                            {item.tags.map((entry) => (
+                              <span className="tag-badge" key={entry}>
+                                {entry}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td>{item.owner.display_name}</td>
                     <td>
@@ -402,14 +536,23 @@ export function ItemsPage() {
                     <td className="date-cell">{formatDate(item.updated_at)}</td>
                     <td>
                       {item.is_deleted ? (
-                        <button
-                          className="small-button small-button-accent"
-                          type="button"
-                          onClick={() => void restoreItem(item)}
-                          disabled={busyId === item.id}
-                        >
-                          {busyId === item.id ? '正在恢复…' : '恢复'}
-                        </button>
+                        <div className="row-actions">
+                          <button
+                            className="small-button small-button-accent"
+                            type="button"
+                            onClick={() => void restoreItem(item)}
+                            disabled={busyId === item.id}
+                          >
+                            {busyId === item.id ? '正在恢复…' : '恢复'}
+                          </button>
+                          <button
+                            className="small-button small-button-danger"
+                            type="button"
+                            onClick={() => setPurgeTarget(item)}
+                          >
+                            永久删除
+                          </button>
+                        </div>
                       ) : (
                         <Link
                           className="small-button button-link"
@@ -450,6 +593,14 @@ export function ItemsPage() {
           </button>
         </div>
       </section>
+
+      {purgeTarget && (
+        <PurgeDialog
+          item={purgeTarget}
+          onClose={() => setPurgeTarget(null)}
+          onPurged={() => void handlePurged()}
+        />
+      )}
     </AppShell>
   )
 }

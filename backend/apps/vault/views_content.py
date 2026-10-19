@@ -24,6 +24,7 @@ from rest_framework.decorators import (
     authentication_classes,
     parser_classes,
     permission_classes,
+    throttle_classes,
 )
 from rest_framework.exceptions import NotFound
 from rest_framework.parsers import MultiPartParser
@@ -35,8 +36,13 @@ from apps.accounts.permissions import IsAdminRole
 
 from . import content_services, crypto
 from .models import VaultItem
-from .serializers import ItemDetailSerializer, TextContentWriteSerializer
+from .serializers import (
+    ItemDetailSerializer,
+    PurgeItemSerializer,
+    TextContentWriteSerializer,
+)
 from .services import can_open_content
+from .throttles import VaultPurgeThrottle
 from .upload import VaultEncryptingUploadHandler
 from .views_admin import _item_with_related
 
@@ -458,3 +464,45 @@ def admin_item_restore(request, item_id: int):
             _item_with_related(item.pk), context={"request": request}
         ).data
     )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated, IsAdminRole])
+@throttle_classes([VaultPurgeThrottle])
+def admin_item_purge(request, item_id: int):
+    item = _admin_item(item_id)
+    if not item.is_deleted:
+        return Response(
+            {
+                "detail": "只有回收站中的条目才能永久删除，请先删除到回收站。",
+                "code": "item_not_deleted",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    serializer = PurgeItemSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    if not request.user.check_password(
+        serializer.validated_data["current_password"]
+    ):
+        logger.warning(
+            "item_purge_failed actor=%s item_id=%s reason=bad_password",
+            request.user.username,
+            item.pk,
+        )
+        return Response(
+            {
+                "detail": "登录密码不正确，内容没有被删除。",
+                "code": "invalid_password",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    deleted_id = item.pk
+    content_services.purge_item(item)
+    logger.info(
+        "item_permanently_deleted actor=%s item_id=%s",
+        request.user.username,
+        deleted_id,
+    )
+    return Response(status=status.HTTP_204_NO_CONTENT)

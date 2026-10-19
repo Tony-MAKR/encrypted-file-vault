@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ApiError,
   adminApi,
+  type ItemOptions,
   type User,
   type VaultGroupSummary,
   type VaultItemDetail,
@@ -11,6 +12,8 @@ import {
 import { AdminContentSection } from '../components/AdminContentSection'
 import { AppShell } from '../components/AppShell'
 import { FormField } from '../components/FormField'
+import { PurgeDialog } from '../components/PurgeDialog'
+import { TagsInput } from '../components/TagsInput'
 import { TextareaField } from '../components/TextareaField'
 import { VaultGate } from '../components/VaultGate'
 
@@ -33,21 +36,32 @@ function formatDate(value: string | null): string {
 
 export function ItemDetailPage() {
   const params = useParams<{ itemId: string }>()
+  const navigate = useNavigate()
   const itemId = Number(params.itemId)
 
   const [item, setItem] = useState<VaultItemDetail | null>(null)
   const [groups, setGroups] = useState<VaultGroupSummary[]>([])
   const [users, setUsers] = useState<User[]>([])
+  const [itemOptions, setItemOptions] = useState<ItemOptions>({
+    categories: [],
+    tags: [],
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
-  const [editForm, setEditForm] = useState({ title: '', description: '' })
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    category: '',
+    tags: [] as string[],
+  })
   const [savingMeta, setSavingMeta] = useState(false)
   const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([])
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([])
   const [selectedOwnerId, setSelectedOwnerId] = useState('')
   const [busyAction, setBusyAction] = useState('')
+  const [purgeOpen, setPurgeOpen] = useState(false)
 
   useEffect(() => {
     if (!Number.isInteger(itemId) || itemId <= 0) {
@@ -60,18 +74,23 @@ export function ItemDetailPage() {
 
     const bootstrap = async () => {
       try {
-        const [itemData, groupData, userData] = await Promise.all([
-          adminApi.getItem(itemId),
-          adminApi.listGroups({ page: 1, pageSize: 100 }),
-          adminApi.listUsers({ page: 1, pageSize: 100 }),
-        ])
+        const [itemData, groupData, userData, options] =
+          await Promise.all([
+            adminApi.getItem(itemId),
+            adminApi.listGroups({ page: 1, pageSize: 100 }),
+            adminApi.listUsers({ page: 1, pageSize: 100 }),
+            adminApi.itemOptions(),
+          ])
         setItem(itemData)
         setEditForm({
           title: itemData.title,
           description: itemData.description,
+          category: itemData.category,
+          tags: itemData.tags,
         })
         setGroups(groupData.results)
         setUsers(userData.results)
+        setItemOptions(options)
       } catch (loadError) {
         if (loadError instanceof ApiError && loadError.status === 404) {
           setError('找不到这条内容，或被删除了。')
@@ -105,9 +124,16 @@ export function ItemDetailPage() {
       const data = await adminApi.updateItem(item.id, {
         title: editForm.title.trim(),
         description: editForm.description.trim(),
+        category: editForm.category.trim(),
+        tags: editForm.tags,
       })
       setItem(data)
-      setEditForm({ title: data.title, description: data.description })
+      setEditForm({
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        tags: data.tags,
+      })
       setNotice('条目标题和说明已保存。')
     } catch (saveError) {
       setError(messageOf(saveError))
@@ -379,20 +405,41 @@ export function ItemDetailPage() {
               所有者：{item.owner.display_name}
             </span>
             <span className="stage-badge">
-              {item.is_archived ? '已归档' : '活跃'}
+              {item.is_deleted
+                ? '回收站'
+                : item.is_archived
+                  ? '已归档'
+                  : '活跃'}
             </span>
+            {item.category && (
+              <span className="stage-badge">分类：{item.category}</span>
+            )}
+            {item.tags.map((tag) => (
+              <span className="tag-badge" key={tag}>
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
         <div className="row-actions">
           {item.is_deleted ? (
-            <button
-              className="primary-button"
-              type="button"
-              onClick={() => void restoreItem()}
-              disabled={busyAction === 'restore'}
-            >
-              {busyAction === 'restore' ? '正在恢复…' : '从回收站恢复'}
-            </button>
+            <>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => void restoreItem()}
+                disabled={busyAction === 'restore'}
+              >
+                {busyAction === 'restore' ? '正在恢复…' : '从回收站恢复'}
+              </button>
+              <button
+                className="danger-button"
+                type="button"
+                onClick={() => setPurgeOpen(true)}
+              >
+                永久删除
+              </button>
+            </>
           ) : (
             <>
               <button
@@ -472,6 +519,35 @@ export function ItemDetailPage() {
               }
               maxLength={1000}
               rows={4}
+              hint="说明是明文管理信息，不要写密码或秘密细节。"
+            />
+            <FormField
+              label="分类"
+              name="edit_item_category"
+              value={editForm.category}
+              onChange={(event) =>
+                setEditForm((current) => ({
+                  ...current,
+                  category: event.target.value,
+                }))
+              }
+              maxLength={50}
+              list="edit-category-options"
+              placeholder="例如：财务资料"
+              hint="分类是明文，用于筛选；不要写密码。"
+            />
+            <datalist id="edit-category-options">
+              {itemOptions.categories.map((category) => (
+                <option value={category} key={category} />
+              ))}
+            </datalist>
+            <TagsInput
+              label="标签"
+              value={editForm.tags}
+              onChange={(tags) =>
+                setEditForm((current) => ({ ...current, tags }))
+              }
+              hint="多个标签用于筛选；标签是明文，不要写密码或敏感细节。"
             />
             <div className="form-actions">
               <button
@@ -763,6 +839,17 @@ export function ItemDetailPage() {
           </ul>
         )}
       </section>
+
+      {purgeOpen && (
+        <PurgeDialog
+          item={item}
+          onClose={() => setPurgeOpen(false)}
+          onPurged={() => {
+            setPurgeOpen(false)
+            navigate('/admin/items', { replace: true })
+          }}
+        />
+      )}
     </AppShell>
   )
 }

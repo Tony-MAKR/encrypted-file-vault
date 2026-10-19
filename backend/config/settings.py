@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(PROJECT_ROOT / ".env")
 
-APP_VERSION = "0.4.0"
+APP_VERSION = "0.5.0"
 
 
 def _get_bool(name: str, default: bool = False) -> bool:

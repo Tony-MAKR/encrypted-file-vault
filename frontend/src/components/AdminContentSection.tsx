@@ -36,6 +36,39 @@ const EMPTY_TEXT = {
   notes: '',
 }
 
+const UPPER = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
+const LOWER = 'abcdefghijkmnopqrstuvwxyz'
+const DIGITS = '23456789'
+const SYMBOLS = '!@#$%^&*()-_=+[]{};:,.?'
+
+function randomInt(max: number): number {
+  const limit = Math.floor(0x100000000 / max) * max
+  const buffer = new Uint32Array(1)
+  let value = 0
+  do {
+    crypto.getRandomValues(buffer)
+    value = buffer[0]
+  } while (value >= limit)
+  return value % max
+}
+
+function generatePassword(length: number): string {
+  const groups = [UPPER, LOWER, DIGITS, SYMBOLS]
+  const all = groups.join('')
+  const characters = groups.map((group) => group[randomInt(group.length)])
+  while (characters.length < length) {
+    characters.push(all[randomInt(all.length)])
+  }
+  for (let index = characters.length - 1; index > 0; index -= 1) {
+    const swap = randomInt(index + 1)
+    ;[characters[index], characters[swap]] = [
+      characters[swap],
+      characters[index],
+    ]
+  }
+  return characters.join('')
+}
+
 export function AdminContentSection({
   item,
   onChanged,
@@ -45,6 +78,7 @@ export function AdminContentSection({
   const [textContent, setTextContent] = useState<SafeTextContent | null>(null)
   const [loadingText, setLoadingText] = useState(false)
   const [form, setForm] = useState(EMPTY_TEXT)
+  const [passwordLength, setPasswordLength] = useState(20)
   const [clearPassword, setClearPassword] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -232,20 +266,54 @@ export function AdminContentSection({
               autoComplete="off"
               placeholder="登录账号"
             />
-            <FormField
-              label={textContent?.has_password ? '新密码（留空不修改）' : '密码'}
-              name="content_password"
-              type="password"
-              value={form.password}
-              onChange={updateField('password')}
-              maxLength={256}
-              autoComplete="new-password"
-              hint={
-                textContent?.has_password
-                  ? '留空表示保持原密码；如需更换，请输入新密码。'
-                  : '可以留空；密码会随整段文字一起加密。'
-              }
-            />
+            <div className="field">
+              <label htmlFor="content_password">
+                {textContent?.has_password ? '新密码（留空不修改）' : '密码'}
+              </label>
+              <div className="password-input-row">
+                <input
+                  id="content_password"
+                  name="content_password"
+                  type="password"
+                  value={form.password}
+                  onChange={updateField('password')}
+                  maxLength={256}
+                  autoComplete="new-password"
+                />
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() =>
+                    setForm((current) => ({
+                      ...current,
+                      password: generatePassword(passwordLength),
+                    }))
+                  }
+                >
+                  生成强密码
+                </button>
+              </div>
+              <div className="generator-row">
+                <label htmlFor="password_length">长度</label>
+                <select
+                  id="password_length"
+                  value={passwordLength}
+                  onChange={(event) =>
+                    setPasswordLength(Number(event.target.value))
+                  }
+                >
+                  <option value={16}>16 位</option>
+                  <option value={20}>20 位</option>
+                  <option value={24}>24 位</option>
+                  <option value={32}>32 位</option>
+                </select>
+              </div>
+              <p className="field-hint">
+                {textContent?.has_password
+                  ? '留空表示保持原密码；生成器只填入表单，点击保存后才加密落库。'
+                  : '可以留空；生成器只在浏览器本地生成，不会发送给服务器或写入日志。'}
+              </p>
+            </div>
             <TextareaField
               label="秘密备注"
               name="content_notes"

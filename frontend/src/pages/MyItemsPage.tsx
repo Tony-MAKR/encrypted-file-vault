@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import {
   vaultApi,
+  type ItemOptions,
   type MyVaultItem,
 } from '../api/client'
 import { AppShell } from '../components/AppShell'
@@ -29,17 +30,33 @@ export function MyItemsPage() {
   const [page, setPage] = useState(1)
   const [searchInput, setSearchInput] = useState('')
   const [query, setQuery] = useState('')
+  const [itemType, setItemType] = useState('')
+  const [category, setCategory] = useState('')
+  const [tag, setTag] = useState('')
+  const [itemOptions, setItemOptions] = useState<ItemOptions>({
+    categories: [],
+    tags: [],
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   const loadItems = useCallback(
-    async (targetPage: number, targetQuery: string) => {
+    async (
+      targetPage: number,
+      targetQuery: string,
+      targetType: string,
+      targetCategory: string,
+      targetTag: string,
+    ) => {
       setLoading(true)
       setError('')
       try {
         const data = await vaultApi.listMyItems({
           page: targetPage,
           q: targetQuery,
+          itemType: targetType,
+          category: targetCategory,
+          tag: targetTag,
           pageSize: PAGE_SIZE,
         })
         const totalPages = Math.max(1, Math.ceil(data.count / PAGE_SIZE))
@@ -61,13 +78,31 @@ export function MyItemsPage() {
   useEffect(() => {
     // loadItems updates state after its async request resolves.
     // oxlint-disable-next-line react/set-state-in-effect
-    void loadItems(page, query)
-  }, [loadItems, page, query])
+    void loadItems(page, query, itemType, category, tag)
+  }, [loadItems, page, query, itemType, category, tag])
+
+  useEffect(() => {
+    vaultApi
+      .itemOptions()
+      .then(setItemOptions)
+      .catch(() => setItemOptions({ categories: [], tags: [] }))
+  }, [])
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setPage(1)
     setQuery(searchInput.trim())
+  }
+
+  const hasFilters = Boolean(itemType || category || tag || query)
+
+  const clearFilters = () => {
+    setSearchInput('')
+    setQuery('')
+    setItemType('')
+    setCategory('')
+    setTag('')
+    setPage(1)
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -124,7 +159,60 @@ export function MyItemsPage() {
               </button>
             )}
           </form>
-          <span className="table-count">共 {total} 条内容</span>
+          <div className="filter-controls">
+            <select
+              aria-label="按类型筛选"
+              value={itemType}
+              onChange={(event) => {
+                setItemType(event.target.value)
+                setPage(1)
+              }}
+            >
+              <option value="">全部类型</option>
+              <option value="text">文字</option>
+              <option value="file">文件</option>
+            </select>
+            <select
+              aria-label="按分类筛选"
+              value={category}
+              onChange={(event) => {
+                setCategory(event.target.value)
+                setPage(1)
+              }}
+            >
+              <option value="">全部分类</option>
+              {itemOptions.categories.map((option) => (
+                <option value={option} key={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="按标签筛选"
+              value={tag}
+              onChange={(event) => {
+                setTag(event.target.value)
+                setPage(1)
+              }}
+            >
+              <option value="">全部标签</option>
+              {itemOptions.tags.map((option) => (
+                <option value={option} key={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            {hasFilters && (
+              <button
+                className="ghost-button"
+                type="button"
+                onClick={clearFilters}
+              >
+                清除筛选
+              </button>
+            )}
+            <span className="table-count">共 {total} 条内容</span>
+          </div>
         </div>
 
         {loading ? (
@@ -140,6 +228,7 @@ export function MyItemsPage() {
                 <tr>
                   <th>标题</th>
                   <th>类型</th>
+                  <th>分类 / 标签</th>
                   <th>所有者</th>
                   <th>更新时间</th>
                   <th className="actions-column">操作</th>
@@ -155,6 +244,24 @@ export function MyItemsPage() {
                     </td>
                     <td>
                       <span className="role-badge">{item.item_type_label}</span>
+                    </td>
+                    <td>
+                      <div className="category-cell">
+                        <span>
+                          {item.category || (
+                            <span className="muted-text">未分类</span>
+                          )}
+                        </span>
+                        {item.tags.length > 0 && (
+                          <div className="tag-row compact">
+                            {item.tags.map((entry) => (
+                              <span className="tag-badge" key={entry}>
+                                {entry}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td>{item.owner.display_name}</td>
                     <td className="date-cell">{formatDate(item.updated_at)}</td>

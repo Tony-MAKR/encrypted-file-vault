@@ -18,6 +18,7 @@ from apps.accounts.models import User
 from apps.accounts.permissions import IsAdminRole
 
 from .content_services import maybe_purge_expired_items
+from .filters import apply_item_filters
 from .models import (
     GroupGrant,
     GroupMembership,
@@ -299,12 +300,42 @@ def _apply_deleted_filter(queryset, request):
     return queryset.filter(is_deleted=False)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminRole])
+def admin_dashboard(request):
+    active_items = VaultItem.objects.filter(is_deleted=False)
+    recent = (
+        active_items.select_related("owner")
+        .annotate(
+            group_grant_count=Count("group_grants", distinct=True),
+            user_grant_count=Count("user_grants", distinct=True),
+            has_content=Exists(
+                VaultContent.objects.filter(item_id=OuterRef("pk"))
+            ),
+        )
+        .order_by("-updated_at", "-id")[:5]
+    )
+    return Response(
+        {
+            "users": User.objects.filter(is_active=True).count(),
+            "groups": VaultGroup.objects.count(),
+            "active_items": active_items.count(),
+            "encrypted_items": VaultContent.objects.filter(
+                item__is_deleted=False
+            ).count(),
+            "trash_items": VaultItem.objects.filter(is_deleted=True).count(),
+            "recent_items": ItemListSerializer(
+                recent, many=True, context={"request": request}
+            ).data,
+        }
+    )
+
+
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated, IsAdminRole])
 def admin_items(request):
     if request.method == "GET":
         maybe_purge_expired_items()
-        search = (request.query_params.get("q") or "").strip()[:50]
         item_type = (request.query_params.get("item_type") or "").strip()
         queryset = (
             VaultItem.objects.select_related("owner")
@@ -317,14 +348,11 @@ def admin_items(request):
             )
             .order_by("-created_at", "-id")
         )
-        if search:
-            queryset = queryset.filter(
-                Q(title__icontains=search) | Q(description__icontains=search)
-            )
         if item_type in VaultItem.ItemType.values:
             queryset = queryset.filter(item_type=item_type)
         queryset = _apply_deleted_filter(queryset, request)
         queryset = _apply_archived_filter(queryset, request)
+        queryset = apply_item_filters(queryset, request)
 
         paginator = VaultPagination()
         page = paginator.paginate_queryset(queryset, request, view=admin_items)
@@ -341,6 +369,8 @@ def admin_items(request):
         title=data["title"],
         item_type=data["item_type"],
         description=data.get("description", ""),
+        category=data.get("category", ""),
+        tags=data.get("tags", []),
         owner=request.user,
     )
     logger.info(
@@ -356,6 +386,27 @@ def admin_items(request):
         ).data,
         status=status.HTTP_201_CREATED,
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, IsAdminRole])
+def admin_item_options(request):
+    items = VaultItem.objects.filter(is_deleted=False).order_by()
+    categories = sorted(
+        {
+            category
+            for category in items.values_list("category", flat=True)
+            if category
+        }
+    )
+    tags = sorted(
+        {
+            tag
+            for values in items.values_list("tags", flat=True)
+            for tag in (values or [])
+        }
+    )
+    return Response({"categories": categories, "tags": tags})
 
 
 @api_view(["GET", "PATCH"])
@@ -377,9 +428,10 @@ def admin_item_detail(request, item_id: int):
     serializer.is_valid(raise_exception=True)
     for field, value in serializer.validated_data.items():
         setattr(item, field, value)
-    item.save(
-        update_fields=[*serializer.validated_data.keys(), "updated_at"]
-    )
+    update_fields = [*serializer.validated_data.keys(), "updated_at"]
+    if "tags" in serializer.validated_data:
+        update_fields.append("tags_text")
+    item.save(update_fields=update_fields)
     logger.info(
         "item_updated actor=%s item_id=%s fields=%s",
         request.user.username,

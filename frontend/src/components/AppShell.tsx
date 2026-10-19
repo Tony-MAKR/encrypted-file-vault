@@ -28,7 +28,7 @@ export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
           <BrandMark small />
           <span>
             <strong>加密文件管理系统</strong>
-            <small>第 4 阶段 · 加密存储</small>
+            <small>第 5 阶段 · Web 完整功能</small>
           </span>
         </Link>
 
@@ -87,7 +87,7 @@ export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
 
       <footer className="app-footer">
         <span>仅限本机开发环境</span>
-        <span>第 4 阶段 / 共 9 个阶段</span>
+        <span>第 5 阶段 / 共 9 个阶段</span>
       </footer>
     </div>
   )

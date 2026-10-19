@@ -97,6 +97,14 @@ export function MyItemDetailPage() {
             <span className="stage-badge">
               所有者：{item.owner.display_name}
             </span>
+            {item.category && (
+              <span className="stage-badge">分类：{item.category}</span>
+            )}
+            {item.tags.map((tag) => (
+              <span className="tag-badge" key={tag}>
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
       </section>

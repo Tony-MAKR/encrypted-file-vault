@@ -18,6 +18,27 @@ EMPTY_CONTENT_NOTICE = "这条条目还没有加密正文。"
 ENCRYPTED_CONTENT_NOTICE = "内容已加密保存；只有被授权的人可以查看。"
 
 
+def normalize_tags(values) -> list[str]:
+    if values is None:
+        return []
+    if not isinstance(values, list):
+        raise serializers.ValidationError("标签格式不正确。")
+    normalized: list[str] = []
+    for value in values:
+        tag = str(value or "").strip()
+        if not tag:
+            continue
+        if len(tag) > 30:
+            raise serializers.ValidationError("每个标签不能超过 30 个字符。")
+        if any(ord(character) < 32 for character in tag):
+            raise serializers.ValidationError("标签不能包含控制字符。")
+        if tag not in normalized:
+            normalized.append(tag)
+    if len(normalized) > 20:
+        raise serializers.ValidationError("标签最多 20 个。")
+    return normalized
+
+
 def _content_of(item: VaultItem) -> VaultContent | None:
     cached = getattr(item, "_vault_content_cache", None)
     if cached is not None:
@@ -102,6 +123,8 @@ class GroupDetailSerializer(GroupSerializer):
                 "title": item.title,
                 "item_type": item.item_type,
                 "item_type_label": item.get_item_type_display(),
+                "category": item.category,
+                "tags": item.tags,
                 "is_archived": item.is_archived,
                 "is_deleted": item.is_deleted,
                 "created_at": item.created_at,
@@ -129,6 +152,8 @@ class ItemListSerializer(serializers.ModelSerializer):
             "item_type",
             "item_type_label",
             "description",
+            "category",
+            "tags",
             "owner",
             "is_archived",
             "archived_at",
@@ -266,6 +291,8 @@ class MyItemSerializer(serializers.ModelSerializer):
             "item_type",
             "item_type_label",
             "description",
+            "category",
+            "tags",
             "owner",
             "content_state",
             "notice",
@@ -378,18 +405,14 @@ class ItemCreateSerializer(serializers.Serializer):
     description = serializers.CharField(
         required=False, allow_blank=True, max_length=1000, default=""
     )
-
-    def validate_title(self, value: str) -> str:
-        title = (value or "").strip()
-        if not title:
-            raise serializers.ValidationError("标题不能为空。")
-        return title
-
-
-class ItemUpdateSerializer(serializers.Serializer):
-    title = serializers.CharField(max_length=120, required=False)
-    description = serializers.CharField(
-        required=False, allow_blank=True, max_length=1000
+    category = serializers.CharField(
+        required=False, allow_blank=True, max_length=50, default=""
+    )
+    tags = serializers.ListField(
+        child=serializers.CharField(allow_blank=True, max_length=30),
+        required=False,
+        default=list,
+        max_length=20,
     )
 
     def validate_title(self, value: str) -> str:
@@ -397,6 +420,33 @@ class ItemUpdateSerializer(serializers.Serializer):
         if not title:
             raise serializers.ValidationError("标题不能为空。")
         return title
+
+    def validate_tags(self, value) -> list[str]:
+        return normalize_tags(value)
+
+
+class ItemUpdateSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=120, required=False)
+    description = serializers.CharField(
+        required=False, allow_blank=True, max_length=1000
+    )
+    category = serializers.CharField(
+        required=False, allow_blank=True, max_length=50
+    )
+    tags = serializers.ListField(
+        child=serializers.CharField(allow_blank=True, max_length=30),
+        required=False,
+        max_length=20,
+    )
+
+    def validate_title(self, value: str) -> str:
+        title = (value or "").strip()
+        if not title:
+            raise serializers.ValidationError("标题不能为空。")
+        return title
+
+    def validate_tags(self, value) -> list[str]:
+        return normalize_tags(value)
 
     def validate(self, attrs: dict) -> dict:
         if not attrs:
@@ -406,6 +456,12 @@ class ItemUpdateSerializer(serializers.Serializer):
 
 class OwnerTransferSerializer(serializers.Serializer):
     owner_id = serializers.IntegerField(min_value=1)
+
+
+class PurgeItemSerializer(serializers.Serializer):
+    current_password = serializers.CharField(
+        write_only=True, trim_whitespace=False, max_length=128
+    )
 
 
 class TextContentWriteSerializer(serializers.Serializer):

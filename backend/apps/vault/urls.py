@@ -13,6 +13,11 @@ urlpatterns = [
     ),
     path("vault/unlock/", views_crypto.vault_unlock, name="vault-unlock"),
     path("vault/lock/", views_crypto.vault_lock, name="vault-lock"),
+    path(
+        "admin/dashboard/",
+        views_admin.admin_dashboard,
+        name="admin-dashboard",
+    ),
     path("admin/groups/", views_admin.admin_groups, name="admin-groups"),
     path(
         "admin/groups/<int:group_id>/",
@@ -90,7 +95,27 @@ urlpatterns = [
         views_content.admin_item_restore,
         name="admin-item-restore",
     ),
+    path(
+        "admin/items/<int:item_id>/purge/",
+        views_content.admin_item_purge,
+        name="admin-item-purge",
+    ),
+    path(
+        "admin/item-options/",
+        views_admin.admin_item_options,
+        name="admin-item-options",
+    ),
     path("items/", views_items.my_items, name="my-items"),
+    path(
+        "items/dashboard/",
+        views_items.my_dashboard,
+        name="my-dashboard",
+    ),
+    path(
+        "items/options/",
+        views_items.my_item_options,
+        name="my-item-options",
+    ),
     path("items/<int:item_id>/", views_items.my_item_detail, name="my-item-detail"),
     path(
         "items/<int:item_id>/content/text/",

@@ -65,6 +65,8 @@ export interface GroupGrantedItem {
   title: string
   item_type: VaultItemType
   item_type_label: string
+  category: string
+  tags: string[]
   is_archived: boolean
   is_deleted: boolean
   created_at: string
@@ -81,6 +83,8 @@ export interface VaultItemSummary {
   item_type: VaultItemType
   item_type_label: string
   description: string
+  category: string
+  tags: string[]
   owner: UserBrief
   is_archived: boolean
   archived_at: string | null
@@ -131,6 +135,8 @@ export interface MyVaultItem {
   item_type: VaultItemType
   item_type_label: string
   description: string
+  category: string
+  tags: string[]
   owner: UserBrief
   content_state: 'empty' | 'encrypted'
   notice: string
@@ -167,6 +173,25 @@ export interface DownloadedFile {
   filename: string
 }
 
+export interface ItemOptions {
+  categories: string[]
+  tags: string[]
+}
+
+export interface AdminDashboard {
+  users: number
+  groups: number
+  active_items: number
+  encrypted_items: number
+  trash_items: number
+  recent_items: VaultItemSummary[]
+}
+
+export interface UserDashboard {
+  visible_items: number
+  recent_items: MyVaultItem[]
+}
+
 export interface GroupPayload {
   name: string
   description: string
@@ -176,6 +201,8 @@ export interface ItemPayload {
   title: string
   item_type: VaultItemType
   description: string
+  category?: string
+  tags?: string[]
 }
 
 export interface GrantResult {
@@ -204,6 +231,8 @@ const FIELD_LABELS: Record<string, string> = {
   item_type: '类型',
   master_password: '主密码',
   master_password_confirm: '确认主密码',
+  category: '分类',
+  tags: '标签',
   file: '文件',
   group_id: '用户组',
   group_ids: '用户组',
@@ -529,6 +558,8 @@ export const adminApi = {
     page = 1,
     q = '',
     itemType = '',
+    category = '',
+    tag = '',
     archived = 'active',
     deleted = 'active',
     pageSize = 20,
@@ -536,6 +567,8 @@ export const adminApi = {
     page?: number
     q?: string
     itemType?: string
+    category?: string
+    tag?: string
     archived?: ArchivedFilter
     deleted?: 'active' | 'only' | 'all'
     pageSize?: number
@@ -550,10 +583,22 @@ export const adminApi = {
     if (itemType) {
       params.set('item_type', itemType)
     }
+    if (category) {
+      params.set('category', category)
+    }
+    if (tag) {
+      params.set('tag', tag)
+    }
     return apiFetch<Paginated<VaultItemSummary>>(
       `/api/v1/admin/items/?${params.toString()}`,
     )
   },
+
+  itemOptions: () =>
+    apiFetch<ItemOptions>('/api/v1/admin/item-options/'),
+
+  dashboard: () =>
+    apiFetch<AdminDashboard>('/api/v1/admin/dashboard/'),
 
   createItem: (payload: ItemPayload) =>
     apiFetch<VaultItemDetail>('/api/v1/admin/items/', {
@@ -566,7 +611,12 @@ export const adminApi = {
 
   updateItem: (
     itemId: number,
-    payload: { title?: string; description?: string },
+    payload: {
+      title?: string
+      description?: string
+      category?: string
+      tags?: string[]
+    },
   ) =>
     apiFetch<VaultItemDetail>(`/api/v1/admin/items/${itemId}/`, {
       method: 'PATCH',
@@ -639,6 +689,12 @@ export const adminApi = {
     apiFetch<VaultItemDetail>(`/api/v1/admin/items/${itemId}/restore/`, {
       method: 'POST',
     }),
+
+  purgeItem: (itemId: number, currentPassword: string) =>
+    apiFetch<void>(`/api/v1/admin/items/${itemId}/purge/`, {
+      method: 'POST',
+      body: JSON.stringify({ current_password: currentPassword }),
+    }),
 }
 
 export const vaultApi = {
@@ -686,15 +742,42 @@ export const vaultApi = {
   listMyItems: ({
     page = 1,
     q = '',
+    itemType = '',
+    category = '',
+    tag = '',
     pageSize = 20,
   }: {
     page?: number
     q?: string
+    itemType?: string
+    category?: string
+    tag?: string
     pageSize?: number
-  } = {}) =>
-    apiFetch<Paginated<MyVaultItem>>(
-      `/api/v1/items/?page=${page}&page_size=${pageSize}&q=${encodeURIComponent(q)}`,
-    ),
+  } = {}) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+      q,
+    })
+    if (itemType) {
+      params.set('item_type', itemType)
+    }
+    if (category) {
+      params.set('category', category)
+    }
+    if (tag) {
+      params.set('tag', tag)
+    }
+    return apiFetch<Paginated<MyVaultItem>>(
+      `/api/v1/items/?${params.toString()}`,
+    )
+  },
+
+  itemOptions: () =>
+    apiFetch<ItemOptions>('/api/v1/items/options/'),
+
+  dashboard: () =>
+    apiFetch<UserDashboard>('/api/v1/items/dashboard/'),
 
   getMyItem: (itemId: number) =>
     apiFetch<MyVaultItem>(`/api/v1/items/${itemId}/`),
