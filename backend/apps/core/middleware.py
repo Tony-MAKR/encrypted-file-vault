@@ -6,6 +6,7 @@ import logging
 import time
 import uuid
 
+from apps.core.headers import CONTENT_SECURITY_POLICY
 from apps.core.logging import reset_request_id, set_request_id
 
 access_logger = logging.getLogger("apps.core.access")
@@ -64,4 +65,8 @@ class SecurityHeadersMiddleware:
         )
         if request.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
+        if response.get("Content-Type", "").startswith("text/html"):
+            response.headers.setdefault(
+                "Content-Security-Policy", CONTENT_SECURITY_POLICY
+            )
         return response

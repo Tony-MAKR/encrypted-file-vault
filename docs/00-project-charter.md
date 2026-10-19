@@ -4,7 +4,7 @@
 |---|---|
 | 文档版本 | v1.1 |
 | 日期 | 2026-10-17 |
-| 状态 | **总体方案已确认；第 1、2、3、4、5 阶段已验收；第 6 阶段 spec 待审阅** |
+| 状态 | **总体方案已确认；第 1–5 阶段已验收；第 6 阶段已实现，等待验收** |
 | 确认方式 | 你已回复“按推荐方案来” |
 | 关联文档 | [可行性研究报告](01-feasibility-study.md) · [需求分析说明书](02-requirements-analysis.md) · [第 1 阶段 spec](specs/01-project-foundation.md) · [第 2 阶段 spec](specs/02-accounts-and-roles.md) · [第 3 阶段 spec](specs/03-groups-and-authorization.md) · [第 4 阶段 spec](specs/04-encryption-engine.md) · [第 5 阶段 spec](specs/05-web-features.md) · [第 6 阶段 spec](specs/06-desktop-client.md) |
 
@@ -104,7 +104,7 @@
 7. 现有账号、用户组、条目和授权在迁移后保持不变；迁移前备份在 `data/backups/stage3-before-content-20261019-191120/`。
 8. 第 5 阶段“Web 端完整功能”已于 2026-10-19 验收通过；详见 [第 5 阶段 spec](specs/05-web-features.md) 第十六节。
 9. 第 5 阶段实现了分类/标签、筛选搜索、主页统计、密码生成器和回收站永久删除；现有账号、条目、授权和加密内容保持不变。
-10. 第 6 阶段“桌面客户端”的 spec 已写好，重点是 Windows 桌面外壳、服务器地址配置、安装包和安全设置；见 [第 6 阶段 spec](specs/06-desktop-client.md)。确认前不开始第 6 阶段代码。
+10. 第 6 阶段“桌面客户端”已实现，等待验收：Windows 桌面外壳、服务器地址配置、后端静态网页、安装包/免安装包和 SHA-256 校验；见 [第 6 阶段 spec](specs/06-desktop-client.md) 第十五、十六节。本阶段未修改数据库结构，现有账号、条目、授权、密钥和密文保持不变。
 
 ---
 

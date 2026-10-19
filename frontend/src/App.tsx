@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { API_DISPLAY_ORIGIN } from './api/client'
 import { useAuth } from './auth/AuthContext'
 import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -64,7 +65,7 @@ function ConnectionError({
         <h1>暂时连不上后端</h1>
         <p>{message}</p>
         <p className="muted-text">
-          请确认后端窗口仍在运行，然后重试。后端地址：127.0.0.1:8000。
+          请确认后端窗口仍在运行，然后重试。后端地址：{API_DISPLAY_ORIGIN}。
         </p>
         <button className="primary-button" type="button" onClick={onRetry}>
           重新连接

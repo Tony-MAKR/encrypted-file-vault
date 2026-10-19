@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' file:; style-src 'self' file:; img-src 'self' file: data:; connect-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>服务器设置</title>
+    <link rel="stylesheet" href="./desktop.css" />
+  </head>
+  <body>
+    <main class="card">
+      <header class="page-header">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <p class="eyebrow">加密文件管理系统</p>
+          <h1>连接服务器</h1>
+        </div>
+      </header>
+
+      <p class="lead">
+        桌面客户端只是窗口。账号、条目、密钥和密文都保存在运行服务器的主机上，
+        不会复制到这台电脑。
+      </p>
+
+      <form id="settings-form" novalidate>
+        <label class="field" for="server-url">
+          <span class="field-label">服务器地址</span>
+          <input
+            id="server-url"
+            name="server-url"
+            type="text"
+            inputmode="url"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="http://127.0.0.1:8000"
+          />
+          <span class="field-hint">
+            只支持 http:// 或 https://。本机默认地址是
+            <code>http://127.0.0.1:8000</code>。
+          </span>
+        </label>
+
+        <div
+          id="status"
+          class="status status-info"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+
+        <div class="actions">
+          <button id="cancel-button" class="secondary-button" type="button" hidden>
+            取消
+          </button>
+          <button id="test-button" class="secondary-button" type="button">
+            测试连接
+          </button>
+          <button id="save-button" class="primary-button" type="submit">
+            保存并连接
+          </button>
+        </div>
+      </form>
+
+      <section id="first-run-help" class="notice" hidden>
+        <strong>第一次使用？</strong>
+        <p>
+          请先在运行服务器的主机上启动服务（运行
+          <code>scripts\start.ps1</code>），再回到这里点“测试连接”。
+        </p>
+      </section>
+
+      <footer class="meta-line">
+        客户端版本 <span id="version">—</span> ·
+        不保存登录密码、主密码或密钥
+      </footer>
+    </main>
+
+    <script src="./settings.js"></script>
+  </body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' file:; style-src 'self' file:; img-src 'self' file: data:; connect-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>关于</title>
+    <link rel="stylesheet" href="./desktop.css" />
+  </head>
+  <body>
+    <main class="card">
+      <header class="page-header">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <p class="eyebrow">加密文件管理系统</p>
+          <h1>关于桌面客户端</h1>
+        </div>
+      </header>
+
+      <dl class="detail-list">
+        <dt>客户端版本</dt>
+        <dd id="version">—</dd>
+        <dt>构建时间</dt>
+        <dd id="build-time">—</dd>
+        <dt>服务器地址</dt>
+        <dd id="server-url">—</dd>
+      </dl>
+
+      <section class="section">
+        <h2>更新方式</h2>
+        <p>
+          本版本为手动更新。客户端不会自动下载或执行远程程序。需要升级时，
+          请从发布页下载新的安装包并覆盖安装；升级前建议先备份服务器数据。
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>数据在哪里</h2>
+        <p>
+          账号、条目、数据库、主密钥和密文都保存在运行服务器的主机上。
+          客户端只保存服务器地址和窗口大小；不保存登录密码、主密码或密钥。
+        </p>
+      </section>
+
+      <section class="section">
+        <h2>卸载说明</h2>
+        <p>
+          卸载客户端只会删除这台电脑上的客户端程序和设置，
+          不会删除服务器上的数据库、密钥、密文或备份。
+        </p>
+      </section>
+
+      <div class="actions">
+        <button id="settings-button" class="secondary-button" type="button">
+          服务器设置
+        </button>
+        <button id="close-button" class="primary-button" type="button">
+          关闭
+        </button>
+      </div>
+    </main>
+
+    <script src="./about.js"></script>
+  </body>
+</html>

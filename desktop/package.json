@@ -1,0 +1,76 @@
+{
+  "name": "encrypted-file-vault-desktop",
+  "version": "0.6.0",
+  "private": true,
+  "description": "Windows desktop shell for the encrypted file vault",
+  "main": "main.js",
+  "author": "Encrypted File Vault contributors",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/urls.test.js tests/config.test.js tests/server-check.test.js",
+    "smoke": "electron . --smoke-test",
+    "prepare-build": "node scripts/prepare-build.js",
+    "dist": "node scripts/prepare-build.js && electron-builder --win nsis zip --x64"
+  },
+  "devDependencies": {
+    "electron": "44.9.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.encryptedfilevault.desktop",
+    "productName": "加密文件管理系统",
+    "copyright": "Copyright © 2026 Encrypted File Vault contributors",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist-build-info.json",
+        "to": "build-info.json"
+      }
+    ],
+    "asar": true,
+    "electronLanguages": [
+      "zh-CN",
+      "en-US"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "EncryptedFileVault-Portable-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "加密文件管理系统",
+      "uninstallDisplayName": "加密文件管理系统 ${version}",
+      "deleteAppDataOnUninstall": true,
+      "artifactName": "EncryptedFileVault-Setup-${version}-${arch}.${ext}"
+    },
+    "publish": null
+  }
+}

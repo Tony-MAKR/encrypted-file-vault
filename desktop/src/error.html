@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self' file:; style-src 'self' file:; img-src 'self' file: data:; connect-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>无法连接服务器</title>
+    <link rel="stylesheet" href="./desktop.css" />
+  </head>
+  <body>
+    <main class="card">
+      <header class="page-header">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <p class="eyebrow">加密文件管理系统</p>
+          <h1>无法连接服务器</h1>
+        </div>
+      </header>
+
+      <p id="error-message" class="error-text">
+        无法连接到服务器。请确认服务器已启动。
+      </p>
+
+      <dl class="detail-list">
+        <dt>服务器地址</dt>
+        <dd id="server-url">—</dd>
+      </dl>
+
+      <section class="notice">
+        <strong>服务器还没有启动？</strong>
+        <p>
+          请在运行服务器的主机上运行
+          <code>scripts\start.ps1</code>，然后回到这里点“重试”。
+          如果服务器在另一台电脑上，请先确认地址和端口正确。
+        </p>
+      </section>
+
+      <div class="actions">
+        <button id="settings-button" class="secondary-button" type="button">
+          修改服务器地址
+        </button>
+        <button id="retry-button" class="primary-button" type="button">
+          重试连接
+        </button>
+      </div>
+
+      <footer class="meta-line">
+        客户端版本 <span id="version">—</span> ·
+        数据仍保存在服务器上，客户端不会复制数据库或密钥
+      </footer>
+    </main>
+
+    <script src="./error.js"></script>
+  </body>
+</html>

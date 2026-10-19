@@ -211,9 +211,19 @@ export interface GrantResult {
   grant_count: number
 }
 
+const DEV_API_BASE_URL = 'http://127.0.0.1:8000'
+
+// In development Vite runs on :5173 and the API on :8000. A production build
+// is served by Django itself, so requests stay same-origin: cookies, CSRF and
+// downloads behave exactly like the browser and the desktop shell.
 const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
+  import.meta.env.VITE_API_BASE_URL ??
+  (import.meta.env.DEV ? DEV_API_BASE_URL : '')
 ).replace(/\/$/, '')
+
+export const API_DISPLAY_ORIGIN = import.meta.env.DEV
+  ? DEV_API_BASE_URL
+  : window.location.origin
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 const FIELD_LABELS: Record<string, string> = {

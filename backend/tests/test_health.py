@@ -11,7 +11,7 @@ def test_health_returns_ok(client):
     assert response.json() == {
         "status": "ok",
         "database": "ok",
-        "version": "0.5.0",
+        "version": "0.6.0",
     }
     assert response["Cache-Control"] == "no-store"
     assert response["X-Request-ID"]
@@ -27,7 +27,7 @@ def test_health_returns_503_when_database_is_unavailable(client, monkeypatch):
     assert response.json() == {
         "status": "degraded",
         "database": "error",
-        "version": "0.5.0",
+        "version": "0.6.0",
     }
 
 

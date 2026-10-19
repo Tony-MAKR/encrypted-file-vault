@@ -19,6 +19,11 @@ frontend/dist/
 frontend/.vite/
 npm-debug.log*
 
+# Desktop client (build output; Electron binary is downloaded, not tracked)
+desktop/node_modules/
+desktop/release/
+desktop/dist-build-info.json
+
 # Application data: never commit databases, vault blobs, logs or backups
 data/
 *.sqlite3

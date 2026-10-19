@@ -46,8 +46,22 @@ finally {
     Pop-Location
 }
 
+$Desktop = Join-Path $Root "desktop"
+if (Test-Path (Join-Path $Desktop "package.json")) {
+    Write-Host "Installing desktop client dependencies..."
+    Push-Location $Desktop
+    try {
+        npm install
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 Write-Host ""
 Write-Host "Setup complete."
-Write-Host "Start the app with: powershell -ExecutionPolicy Bypass -File scripts/dev.ps1"
+Write-Host "Development: powershell -ExecutionPolicy Bypass -File scripts/dev.ps1"
+Write-Host "Normal use:  powershell -ExecutionPolicy Bypass -File scripts/start.ps1"
+Write-Host "Desktop:     powershell -ExecutionPolicy Bypass -File scripts/build-desktop.ps1"
 Write-Host "Backend:  http://127.0.0.1:8000/api/v1/health/"
-Write-Host "Frontend: http://127.0.0.1:5173"
+Write-Host "Frontend: http://127.0.0.1:5173 (development only)"

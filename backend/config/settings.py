@@ -14,13 +14,14 @@ from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
+from apps.core.staticfiles import add_static_headers
 from config.security import validate_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(PROJECT_ROOT / ".env")
 
-APP_VERSION = "0.5.0"
+APP_VERSION = "0.6.0"
 
 
 def _get_bool(name: str, default: bool = False) -> bool:
@@ -102,6 +103,10 @@ AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Serves the built React application (and nothing under DATA_DIR) directly
+    # from FRONTEND_DIST_DIR. It runs before Django URL routing so hashed
+    # assets are returned with long-lived cache headers.
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "apps.core.middleware.RequestIDMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -265,6 +270,21 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = DATA_DIR / "staticfiles"
+STATIC_ROOT.mkdir(parents=True, exist_ok=True)
+
+# Production / desktop webpage assets. The frontend build writes to this
+# directory; WhiteNoise serves it, and a small Django fallback returns
+# index.html for React routes. The directory is separate from DATA_DIR so
+# databases, keys and ciphertext can never be exposed through it.
+FRONTEND_DIST_DIR = Path(
+    os.getenv("FRONTEND_DIST_DIR", str(PROJECT_ROOT / "frontend" / "dist"))
+).expanduser()
+if not FRONTEND_DIST_DIR.is_absolute():
+    FRONTEND_DIST_DIR = (PROJECT_ROOT / FRONTEND_DIST_DIR).resolve()
+
+WHITENOISE_ROOT = str(FRONTEND_DIST_DIR) if FRONTEND_DIST_DIR.is_dir() else None
+WHITENOISE_ALLOW_ALL_ORIGINS = False
+WHITENOISE_ADD_HEADERS_FUNCTION = add_static_headers
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
