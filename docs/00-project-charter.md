@@ -4,9 +4,9 @@
 |---|---|
 | 文档版本 | v1.1 |
 | 日期 | 2026-10-17 |
-| 状态 | **总体方案已确认；第 1、2、3 阶段已验收；第 4 阶段已开发，待验收** |
+| 状态 | **总体方案已确认；第 1、2、3、4 阶段已验收；第 5 阶段 spec 待审阅** |
 | 确认方式 | 你已回复“按推荐方案来” |
-| 关联文档 | [可行性研究报告](01-feasibility-study.md) · [需求分析说明书](02-requirements-analysis.md) · [第 1 阶段 spec](specs/01-project-foundation.md) · [第 2 阶段 spec](specs/02-accounts-and-roles.md) · [第 3 阶段 spec](specs/03-groups-and-authorization.md) · [第 4 阶段 spec](specs/04-encryption-engine.md) |
+| 关联文档 | [可行性研究报告](01-feasibility-study.md) · [需求分析说明书](02-requirements-analysis.md) · [第 1 阶段 spec](specs/01-project-foundation.md) · [第 2 阶段 spec](specs/02-accounts-and-roles.md) · [第 3 阶段 spec](specs/03-groups-and-authorization.md) · [第 4 阶段 spec](specs/04-encryption-engine.md) · [第 5 阶段 spec](specs/05-web-features.md) |
 
 ---
 
@@ -99,10 +99,10 @@
 2. 第 2 阶段“账号与角色”已于 2026-10-18 验收通过；真实数据库中的现有账号继续保留。
 3. 第 3 阶段“用户组与授权”已于 2026-10-19 验收通过；四项决定按推荐执行，详见 [第 3 阶段 spec](specs/03-groups-and-authorization.md) 第十六节。
 4. 第 3 阶段只新增了 5 张表；迁移前备份在 `data/backups/stage2-before-groups-20261018-235738/`，迁移后账号数量、密码校验值、角色和启用状态均未改变。
-5. 第 4 阶段“加密存储引擎”的决定已于 2026-10-19 按推荐确认，并已完成开发、自动化测试和隔离数据库浏览器验收；详见 [第 4 阶段 spec](specs/04-encryption-engine.md) 第十六节。
+5. 第 4 阶段“加密存储引擎”已于 2026-10-19 验收通过；详见 [第 4 阶段 spec](specs/04-encryption-engine.md) 第十六节。
 6. 第 4 阶段实现了主密码解锁、AES-256-GCM 信封加密、流式文件加解密、文字秘密、下载、锁定和 30 天回收站。
 7. 现有账号、用户组、条目和授权在迁移后保持不变；迁移前备份在 `data/backups/stage3-before-content-20261019-191120/`。
-8. 你验收通过后，我再写第 5 阶段“Web 端完整功能”的 spec；确认前不开始第 5 阶段代码。
+8. 第 5 阶段“Web 端完整功能”的 spec 已写好，重点是分类/标签、筛选搜索、回收站永久删除、完整管理界面和可用性；见 [第 5 阶段 spec](specs/05-web-features.md)。确认前不开始第 5 阶段代码。
 
 ---
 
