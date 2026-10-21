@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { API_DISPLAY_ORIGIN } from './api/client'
 import { useAuth } from './auth/AuthContext'
+import { AuditPage } from './pages/AuditPage'
+import { BackupPage } from './pages/BackupPage'
 import { ChangePasswordPage } from './pages/ChangePasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { GroupDetailPage } from './pages/GroupDetailPage'
@@ -174,6 +176,22 @@ function App() {
         element={
           <AdminRoute>
             <ItemDetailPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/audit"
+        element={
+          <AdminRoute>
+            <AuditPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/backup"
+        element={
+          <AdminRoute>
+            <BackupPage />
           </AdminRoute>
         }
       />

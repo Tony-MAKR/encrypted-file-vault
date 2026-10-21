@@ -16,6 +16,11 @@ from rest_framework.response import Response
 
 from apps.accounts.models import User
 from apps.accounts.permissions import IsAdminRole
+from apps.audit.services import (
+    record_audit,
+    target_group,
+    target_item,
+)
 
 from .content_services import maybe_purge_expired_items
 from .filters import apply_item_filters
@@ -139,6 +144,7 @@ def admin_groups(request):
     logger.info(
         "group_created actor=%s group_id=%s", request.user.username, group.pk
     )
+    record_audit(request, "group_created", **target_group(group))
     return Response(
         GroupDetailSerializer(_group_with_related(group.pk)).data,
         status=status.HTTP_201_CREATED,
@@ -173,6 +179,10 @@ def admin_group_detail(request, group_id: int):
             group.pk,
             ",".join(sorted(serializer.validated_data)),
         )
+        record_audit(
+            request, "group_updated", **target_group(group),
+            detail={"fields": sorted(serializer.validated_data)},
+        )
         return Response(
             GroupDetailSerializer(_group_with_related(group.pk)).data
         )
@@ -193,6 +203,13 @@ def admin_group_detail(request, group_id: int):
         request.user.username,
         group_id,
         group_name,
+    )
+    record_audit(
+        request,
+        "group_deleted",
+        target_type="group",
+        target_id=group_id,
+        target_label=group_name,
     )
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -250,6 +267,14 @@ def admin_group_members(request, group_id: int):
                 user.username,
             )
 
+    if added:
+        record_audit(
+            request,
+            "group_member_added",
+            **target_group(group),
+            detail={"added": [user.username for user in added]},
+        )
+
     return Response(
         {
             "added": UserBriefSerializer(added, many=True).data,
@@ -273,6 +298,14 @@ def admin_group_member_detail(request, group_id: int, user_id: int):
             request.user.username,
             group_id,
             username,
+        )
+        record_audit(
+            request,
+            "group_member_removed",
+            target_type="group",
+            target_id=group_id,
+            target_label="",
+            detail={"removed": username},
         )
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -380,6 +413,10 @@ def admin_items(request):
         request.user.username,
         item.item_type,
     )
+    record_audit(
+        request, "item_created", **target_item(item),
+        detail={"item_type": item.item_type},
+    )
     return Response(
         ItemDetailSerializer(
             _item_with_related(item.pk), context={"request": request}
@@ -438,6 +475,10 @@ def admin_item_detail(request, item_id: int):
         item.pk,
         ",".join(sorted(serializer.validated_data)),
     )
+    record_audit(
+        request, "item_updated", **target_item(item),
+        detail={"fields": sorted(serializer.validated_data)},
+    )
     return Response(
         ItemDetailSerializer(
             _item_with_related(item.pk), context={"request": request}
@@ -460,6 +501,7 @@ def admin_item_archive(request, item_id: int):
             request.user.username,
             item.pk,
         )
+        record_audit(request, "item_archived", **target_item(item))
     return Response(
         ItemDetailSerializer(
             _item_with_related(item.pk), context={"request": request}
@@ -482,6 +524,7 @@ def admin_item_unarchive(request, item_id: int):
             request.user.username,
             item.pk,
         )
+        record_audit(request, "item_unarchived", **target_item(item))
     return Response(
         ItemDetailSerializer(
             _item_with_related(item.pk), context={"request": request}
@@ -525,6 +568,10 @@ def admin_item_owner(request, item_id: int):
         item.pk,
         old_owner.username,
         target.username,
+    )
+    record_audit(
+        request, "item_owner_changed", **target_item(item),
+        detail={"old_owner": old_owner.username, "new_owner": target.username},
     )
     return Response(
         ItemDetailSerializer(
@@ -577,6 +624,14 @@ def admin_item_group_grants(request, item_id: int):
                 group.pk,
             )
 
+    if added:
+        record_audit(
+            request,
+            "grant_group_added",
+            **target_item(item),
+            detail={"group_ids": added},
+        )
+
     return Response(
         {
             "added": added,
@@ -598,6 +653,14 @@ def admin_item_group_grant_detail(request, item_id: int, group_id: int):
             request.user.username,
             item_id,
             group_id,
+        )
+        record_audit(
+            request,
+            "grant_group_removed",
+            target_type="item",
+            target_id=item_id,
+            target_label="",
+            detail={"group_id": group_id},
         )
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -657,6 +720,14 @@ def admin_item_user_grants(request, item_id: int):
                 user.username,
             )
 
+    if added:
+        record_audit(
+            request,
+            "grant_user_added",
+            **target_item(item),
+            detail={"user_ids": added},
+        )
+
     return Response(
         {
             "added": added,
@@ -678,5 +749,13 @@ def admin_item_user_grant_detail(request, item_id: int, user_id: int):
             request.user.username,
             item_id,
             user_id,
+        )
+        record_audit(
+            request,
+            "grant_user_removed",
+            target_type="item",
+            target_id=item_id,
+            target_label="",
+            detail={"user_id": user_id},
         )
     return Response(status=status.HTTP_204_NO_CONTENT)

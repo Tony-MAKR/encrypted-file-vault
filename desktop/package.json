@@ -1,6 +1,6 @@
 {
   "name": "encrypted-file-vault-desktop",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "Windows desktop shell for the encrypted file vault",
   "main": "main.js",

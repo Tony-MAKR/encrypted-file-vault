@@ -13,6 +13,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.audit.services import record_audit, target_user
+
 from .models import User
 from .permissions import IsAdminRole
 from .serializers import (
@@ -82,6 +84,9 @@ def admin_users(request):
         user.username,
         user.role,
     )
+    record_audit(
+        request, "user_created", **target_user(user), detail={"role": user.role}
+    )
     return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
 
@@ -100,6 +105,10 @@ def admin_user_detail(request, user_id: int):
         "user_updated actor=%s target=%s field=display_name",
         request.user.username,
         target.username,
+    )
+    record_audit(
+        request, "user_updated", **target_user(target),
+        detail={"fields": sorted(serializer.validated_data)},
     )
     return Response(UserSerializer(target).data)
 
@@ -138,6 +147,10 @@ def admin_user_role(request, user_id: int):
             target.username,
             new_role,
         )
+        record_audit(
+            request, "user_role_changed", **target_user(target),
+            detail={"role": new_role},
+        )
 
     return Response(UserSerializer(target).data)
 
@@ -167,6 +180,7 @@ def admin_user_disable(request, user_id: int):
             request.user.username,
             target.username,
         )
+        record_audit(request, "user_disabled", **target_user(target))
 
     return Response(UserSerializer(target).data)
 
@@ -192,6 +206,7 @@ def admin_user_enable(request, user_id: int):
             request.user.username,
             target.username,
         )
+        record_audit(request, "user_enabled", **target_user(target))
 
     return Response(UserSerializer(target).data)
 
@@ -230,6 +245,7 @@ def admin_user_reset_password(request, user_id: int):
         request.user.username,
         target.username,
     )
+    record_audit(request, "user_password_reset", **target_user(target))
     return Response(
         {"detail": "密码已重置；用户下次登录时必须修改密码。"}
     )
@@ -245,4 +261,5 @@ def admin_user_unlock(request, user_id: int):
         request.user.username,
         target.username,
     )
+    record_audit(request, "user_unlocked", **target_user(target))
     return Response(UserSerializer(target).data)

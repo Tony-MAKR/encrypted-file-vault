@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.accounts.permissions import IsAdminRole
+from apps.audit.services import record_audit, target_vault
 
 from . import crypto
 from .serializers import VaultInitializeSerializer, VaultUnlockSerializer
@@ -75,6 +76,7 @@ def vault_initialize(request):
         )
 
     logger.info("vault_initialized actor=%s", request.user.username)
+    record_audit(request, "vault_initialized", **target_vault())
     return Response(status_payload(), status=status.HTTP_201_CREATED)
 
 
@@ -101,6 +103,10 @@ def vault_unlock(request):
             "vault_unlock_failed actor=%s reason=bad_password",
             request.user.username,
         )
+        record_audit(
+            request, "vault_unlock_failed", **target_vault(),
+            result="failure", detail={"reason": "bad_password"},
+        )
         return Response(
             {
                 "detail": "主密码不正确。",
@@ -113,6 +119,10 @@ def vault_unlock(request):
             "vault_unlock_failed actor=%s reason=key_file",
             request.user.username,
         )
+        record_audit(
+            request, "vault_unlock_failed", **target_vault(),
+            result="failure", detail={"reason": "key_file"},
+        )
         return Response(
             {
                 "detail": "密钥文件无法读取或已损坏，请联系维护者。",
@@ -122,6 +132,7 @@ def vault_unlock(request):
         )
 
     logger.info("vault_unlocked actor=%s", request.user.username)
+    record_audit(request, "vault_unlocked", **target_vault())
     return Response(status_payload())
 
 
@@ -130,4 +141,5 @@ def vault_unlock(request):
 def vault_lock(request):
     crypto.lock()
     logger.info("vault_locked actor=%s", request.user.username)
+    record_audit(request, "vault_locked", **target_vault())
     return Response(status_payload())

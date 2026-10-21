@@ -33,6 +33,7 @@ from rest_framework.response import Response
 
 from apps.accounts.authentication import SessionAuthentication401
 from apps.accounts.permissions import IsAdminRole
+from apps.audit.services import record_audit, target_item
 
 from . import content_services, crypto
 from .models import VaultItem
@@ -197,6 +198,7 @@ def admin_text_content(request, item_id: int):
         request.user.username,
         item.pk,
     )
+    record_audit(request, "text_saved", **target_item(item))
     return Response(
         ItemDetailSerializer(
             _item_with_related(item.pk), context={"request": request}
@@ -313,6 +315,10 @@ def admin_file_content(request, item_id: int):
         item.pk,
         upload.plaintext_size,
     )
+    record_audit(
+        request, "file_uploaded", **target_item(item),
+        detail={"size": upload.plaintext_size},
+    )
     return Response(
         ItemDetailSerializer(
             _item_with_related(item.pk), context={"request": request}
@@ -337,6 +343,7 @@ def text_content(request, item_id: int):
         request.user.username,
         item.pk,
     )
+    record_audit(request, "text_viewed", **target_item(item))
     return Response(
         {
             "url": payload.get("url", ""),
@@ -372,6 +379,7 @@ def reveal_text_password(request, item_id: int):
         request.user.username,
         item.pk,
     )
+    record_audit(request, "text_revealed", **target_item(item))
     return Response({"password": password})
 
 
@@ -384,6 +392,7 @@ def audit_text_copy(request, item_id: int):
         request.user.username,
         item.pk,
     )
+    record_audit(request, "text_copied", **target_item(item))
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -427,6 +436,10 @@ def download_file_content(request, item_id: int):
         item.pk,
         content.plaintext_size,
     )
+    record_audit(
+        request, "file_downloaded", **target_item(item),
+        detail={"size": content.plaintext_size},
+    )
     response = StreamingHttpResponse(
         content_services.stream_file_content(
             content, settings.VAULT_CHUNK_SIZE
@@ -447,6 +460,7 @@ def download_file_content(request, item_id: int):
 def admin_item_trash(request, item_id: int):
     item = _admin_item(item_id)
     content_services.trash_item(item, request.user)
+    record_audit(request, "item_trashed", **target_item(item))
     return Response(
         ItemDetailSerializer(
             _item_with_related(item.pk), context={"request": request}
@@ -459,6 +473,7 @@ def admin_item_trash(request, item_id: int):
 def admin_item_restore(request, item_id: int):
     item = _admin_item(item_id)
     content_services.restore_item(item, request.user)
+    record_audit(request, "item_restored", **target_item(item))
     return Response(
         ItemDetailSerializer(
             _item_with_related(item.pk), context={"request": request}
@@ -490,6 +505,10 @@ def admin_item_purge(request, item_id: int):
             request.user.username,
             item.pk,
         )
+        record_audit(
+            request, "item_purged", **target_item(item),
+            result="failure", detail={"reason": "bad_password"},
+        )
         return Response(
             {
                 "detail": "登录密码不正确，内容没有被删除。",
@@ -499,10 +518,18 @@ def admin_item_purge(request, item_id: int):
         )
 
     deleted_id = item.pk
+    deleted_label = item.title
     content_services.purge_item(item)
     logger.info(
         "item_permanently_deleted actor=%s item_id=%s",
         request.user.username,
         deleted_id,
+    )
+    record_audit(
+        request,
+        "item_purged",
+        target_type="item",
+        target_id=deleted_id,
+        target_label=deleted_label,
     )
     return Response(status=status.HTTP_204_NO_CONTENT)

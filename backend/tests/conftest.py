@@ -19,6 +19,14 @@ def isolated_vault_storage(tmp_path, settings):
     settings.VAULT_KEY_FILE = str(tmp_path / "keys" / "master.key.json")
     settings.VAULT_OBJECTS_DIR = str(tmp_path / "vault" / "objects")
     settings.VAULT_TMP_DIR = str(tmp_path / "vault" / "tmp")
+    settings.BACKUP_DIR = str(tmp_path / "backups")
+    for directory in (
+        tmp_path / "keys",
+        tmp_path / "vault" / "objects",
+        tmp_path / "vault" / "tmp",
+        tmp_path / "backups",
+    ):
+        directory.mkdir(parents=True, exist_ok=True)
     settings.VAULT_KDF_TIME_COST = 1
     settings.VAULT_KDF_MEMORY_COST = 8192
     settings.VAULT_KDF_PARALLELISM = 1

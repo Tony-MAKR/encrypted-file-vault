@@ -192,6 +192,98 @@ export interface UserDashboard {
   recent_items: MyVaultItem[]
 }
 
+export type AuditResult = 'success' | 'failure' | 'denied'
+
+export interface AuditEvent {
+  id: number
+  created_at: string
+  actor_username: string
+  actor_role: string
+  action: string
+  action_label: string
+  category: string
+  target_type: string
+  target_id: number | null
+  target_label: string
+  result: AuditResult
+  result_label: string
+  ip_address: string | null
+  request_id: string
+  detail: Record<string, unknown>
+}
+
+export interface AuditActionOption {
+  value: string
+  label: string
+}
+
+export interface AuditCategoryOption extends AuditActionOption {
+  actions: AuditActionOption[]
+}
+
+export interface AuditOptions {
+  categories: AuditCategoryOption[]
+  results: AuditActionOption[]
+}
+
+export interface BackupRecord {
+  id: number
+  filename: string
+  size_bytes: number
+  sha256: string
+  format_version: number
+  app_version: string
+  created_at: string
+  created_by_username: string
+  status: 'created' | 'verified' | 'failed'
+  status_label: string
+  verified_at: string | null
+  note: string
+  file_exists: boolean
+}
+
+export interface BackupSummary {
+  last_backup_at: string | null
+  last_filename: string
+  last_status: string
+  days_since_last_backup: number | null
+  reminder_days: number
+  reminder_due: boolean
+}
+
+export interface BackupListResponse extends Paginated<BackupRecord> {
+  summary: BackupSummary
+  backup_reminder_days: number
+}
+
+export interface BackupCreateResponse {
+  detail: string
+  backup: BackupRecord | null
+  sha256: string
+  counts: Record<string, number>
+}
+
+export interface BackupVerifyResponse {
+  detail: string
+  created_at: string
+  app_version: string
+  counts: Record<string, number>
+  object_count: number
+}
+
+export interface SystemStatus {
+  version: string
+  database_size_bytes: number
+  object_count: number
+  object_size_bytes: number
+  disk_free_bytes: number
+  audit_count: number
+  vault: VaultStatus
+  backup: BackupSummary
+  trash_retention_days: number
+  audit_retention_days: number
+}
+
 export interface GroupPayload {
   name: string
   description: string
@@ -791,4 +883,68 @@ export const vaultApi = {
 
   getMyItem: (itemId: number) =>
     apiFetch<MyVaultItem>(`/api/v1/items/${itemId}/`),
+}
+
+export interface AuditQuery {
+  page?: number
+  q?: string
+  category?: string
+  action?: string
+  result?: string
+  dateFrom?: string
+  dateTo?: string
+}
+
+export const auditApi = {
+  list: ({
+    page = 1,
+    q = '',
+    category = '',
+    action = '',
+    result = '',
+    dateFrom = '',
+    dateTo = '',
+  }: AuditQuery = {}) => {
+    const params = new URLSearchParams({ page: String(page) })
+    if (q) params.set('q', q)
+    if (category) params.set('category', category)
+    if (action) params.set('action', action)
+    if (result) params.set('result', result)
+    if (dateFrom) params.set('date_from', dateFrom)
+    if (dateTo) params.set('date_to', dateTo)
+    return apiFetch<Paginated<AuditEvent>>(
+      `/api/v1/admin/audit/?${params.toString()}`,
+    )
+  },
+
+  options: () => apiFetch<AuditOptions>('/api/v1/admin/audit/options/'),
+
+  systemStatus: () =>
+    apiFetch<SystemStatus>('/api/v1/admin/system/status/'),
+}
+
+export const backupApi = {
+  list: (page = 1) =>
+    apiFetch<BackupListResponse>(
+      `/api/v1/admin/backups/?page=${page}`,
+    ),
+
+  create: (passphrase: string, confirm: string, note: string) =>
+    apiFetch<BackupCreateResponse>('/api/v1/admin/backups/', {
+      method: 'POST',
+      body: JSON.stringify({
+        passphrase,
+        passphrase_confirm: confirm,
+        note,
+      }),
+    }),
+
+  verify: (backupId: number, passphrase: string) =>
+    apiFetch<BackupVerifyResponse>(
+      `/api/v1/admin/backups/${backupId}/verify/`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ passphrase }),
+      },
+    ),
 }

@@ -29,6 +29,8 @@ from rest_framework.decorators import (
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from apps.audit.services import record_audit, target_user
+
 from .authentication import CsrfEnforcingSessionAuthentication
 from .models import User
 from .serializers import (
@@ -134,6 +136,7 @@ def setup(request) -> Response:
         )
 
     logger.info("setup_completed username=%s", user.username)
+    record_audit(request, "setup_completed", **target_user(user))
     return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
 
 
@@ -151,12 +154,26 @@ def login_view(request) -> Response:
 
     if user is None:
         logger.warning("login_failed username=%s reason=unknown_user", username)
+        record_audit(
+            request,
+            "login_failed",
+            result="failure",
+            actor_username=username,
+            detail={"reason": "unknown_user"},
+        )
         return _login_error()
 
     clear_expired_lock(user)
 
     if user.is_locked():
         logger.warning("login_blocked username=%s reason=locked", username)
+        record_audit(
+            request,
+            "login_blocked",
+            result="denied",
+            actor_username=username,
+            detail={"reason": "locked"},
+        )
         return _login_error(
             "尝试次数过多，请稍后再试。",
             code="account_locked",
@@ -165,12 +182,26 @@ def login_view(request) -> Response:
 
     if not user.is_active:
         logger.warning("login_failed username=%s reason=inactive", username)
+        record_audit(
+            request,
+            "login_failed",
+            result="denied",
+            actor_username=username,
+            detail={"reason": "inactive"},
+        )
         return _login_error()
 
     authenticated = authenticate(request, username=username, password=password)
     if authenticated is None:
         register_login_failure(user)
         logger.warning("login_failed username=%s reason=bad_credentials", username)
+        record_audit(
+            request,
+            "login_failed",
+            result="failure",
+            actor_username=username,
+            detail={"reason": "bad_credentials"},
+        )
         return _login_error()
 
     reset_login_failures(authenticated)
@@ -181,6 +212,7 @@ def login_view(request) -> Response:
     request.session["last_activity"] = now.isoformat()
 
     logger.info("login_succeeded username=%s", authenticated.username)
+    record_audit(request, "login_succeeded", **target_user(authenticated))
     return Response(UserSerializer(authenticated).data)
 
 
@@ -188,6 +220,7 @@ def login_view(request) -> Response:
 @permission_classes([IsAuthenticated])
 def logout_view(request) -> Response:
     username = request.user.username
+    record_audit(request, "logout", **target_user(request.user))
     django_logout(request)
     logger.info("logout username=%s", username)
     return Response(status=status.HTTP_204_NO_CONTENT)
@@ -216,4 +249,5 @@ def change_password(request) -> Response:
     update_session_auth_hash(request, user)
     delete_user_sessions(user, except_session_key=request.session.session_key)
     logger.info("password_changed username=%s", user.username)
+    record_audit(request, "password_changed", **target_user(user))
     return Response({"detail": "密码已修改。"})

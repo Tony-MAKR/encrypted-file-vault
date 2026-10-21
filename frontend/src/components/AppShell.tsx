@@ -5,7 +5,14 @@ import { BrandMark } from './BrandMark'
 
 interface AppShellProps {
   children: ReactNode
-  active?: 'dashboard' | 'users' | 'groups' | 'items' | 'my-items'
+  active?:
+    | 'dashboard'
+    | 'users'
+    | 'groups'
+    | 'items'
+    | 'my-items'
+    | 'audit'
+    | 'backup'
 }
 
 export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
@@ -28,7 +35,7 @@ export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
           <BrandMark small />
           <span>
             <strong>加密文件管理系统</strong>
-            <small>第 5 阶段 · Web 完整功能</small>
+            <small>第 7 阶段 · 审计与备份</small>
           </span>
         </Link>
 
@@ -55,6 +62,18 @@ export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
                 to="/admin/users"
               >
                 用户管理
+              </Link>
+              <Link
+                className={active === 'audit' ? 'active' : ''}
+                to="/admin/audit"
+              >
+                审计日志
+              </Link>
+              <Link
+                className={active === 'backup' ? 'active' : ''}
+                to="/admin/backup"
+              >
+                备份恢复
               </Link>
             </>
           )}
@@ -86,8 +105,8 @@ export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
       <main className="page">{children}</main>
 
       <footer className="app-footer">
-        <span>仅限本机开发环境</span>
-        <span>第 5 阶段 / 共 9 个阶段</span>
+        <span>仅限本机使用 · 未开放局域网</span>
+        <span>第 7 阶段 / 共 9 个阶段</span>
       </footer>
     </div>
   )

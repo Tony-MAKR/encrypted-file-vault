@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 load_dotenv(PROJECT_ROOT / ".env")
 
-APP_VERSION = "0.6.0"
+APP_VERSION = "0.7.0"
 
 
 def _get_bool(name: str, default: bool = False) -> bool:
@@ -97,6 +97,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.accounts",
     "apps.vault",
+    "apps.audit",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -259,6 +260,10 @@ VAULT_CHUNK_SIZE = 1024 * 1024
 VAULT_KDF_TIME_COST = _get_int("VAULT_KDF_TIME_COST", 3)
 VAULT_KDF_MEMORY_COST = _get_int("VAULT_KDF_MEMORY_COST", 65536)
 VAULT_KDF_PARALLELISM = _get_int("VAULT_KDF_PARALLELISM", 4)
+
+# Audit retention and backup reminder (stage 7).
+AUDIT_RETENTION_DAYS = _get_int("AUDIT_RETENTION_DAYS", 180)
+BACKUP_REMINDER_DAYS = _get_int("BACKUP_REMINDER_DAYS", 7)
 
 # ---------------------------------------------------------------------------
 # Internationalization and static files

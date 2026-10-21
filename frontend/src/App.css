@@ -1494,3 +1494,139 @@
     min-width: 150px;
   }
 }
+
+/* Stage 7: audit log and encrypted backups */
+.audit-filters {
+  margin-bottom: 18px;
+}
+
+.inline-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-faint);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.inline-date input {
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface-solid);
+  color: var(--text-strong);
+  font: inherit;
+  font-size: 13px;
+}
+
+.audit-table {
+  min-width: 980px;
+}
+
+.audit-result-success {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.audit-result-failure {
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.audit-result-denied {
+  border-color: var(--warning-border);
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.audit-detail-row td {
+  background: rgba(15, 23, 42, 0.035);
+}
+
+.audit-detail p {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.audit-detail pre {
+  max-height: 320px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 10px;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-strong);
+}
+
+.pagination-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.backup-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.backup-summary h2 {
+  margin-bottom: 6px;
+}
+
+.warning-text {
+  margin: 0 !important;
+  color: var(--warning) !important;
+  font-size: 13px !important;
+}
+
+.code-block {
+  margin: 14px 0;
+  padding: 14px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--text-strong);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.backup-form .field {
+  margin-bottom: 14px;
+}
+
+@media (max-width: 700px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .backup-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Grid children must be allowed to shrink so wide tables scroll inside
+   .table-wrap instead of widening the whole page. */
+.page > * {
+  min-width: 0;
+}
