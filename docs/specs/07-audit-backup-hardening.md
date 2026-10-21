@@ -762,4 +762,4 @@ powershell -ExecutionPolicy Bypass -File scripts/restore-backup.ps1 -File "data\
 | AC7-25 | 自动化与构建 | 通过 |
 | AC7-26 | 真实数据 | 通过 |
 
-**下一步**：[第 8 阶段 spec：测试与开源发布](08-testing-and-release.md)，已于 2026-10-21 完成，等待验收。
+**下一步**：[第 8 阶段 spec：测试与开源发布](08-testing-and-release.md)，已于 2026-10-21 验收；项目 v1.0.0 已完成并发布。

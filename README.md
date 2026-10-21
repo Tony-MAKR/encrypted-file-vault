@@ -8,7 +8,7 @@
 
 > **当前版本：v1.0.0，已发布到 GitHub。**
 > 仓库：https://github.com/Tony-MAKR/encrypted-file-vault
-> 第 1–8 阶段功能已完成，等待最终验收；真实 `.env`、`data/`、密钥、密文和备份不进入 Git。
+> 第 1–8 阶段已于 2026-10-21 全部验收通过；真实 `.env`、`data/`、密钥、密文和备份不进入 Git。
 > 现在系统只在本机使用，**不要开放到局域网或公网**；局域网/HTTPS 尚未配置。
 
 ## 当前能做什么
@@ -369,7 +369,7 @@ Copyright 2026 Encrypted File Vault contributors.
 - [第 5 阶段 spec（已验收）](docs/specs/05-web-features.md)
 - [第 6 阶段 spec（已验收）](docs/specs/06-desktop-client.md)
 - [第 7 阶段 spec（已验收）](docs/specs/07-audit-backup-hardening.md)
-- [第 8 阶段 spec（已实现，待验收）](docs/specs/08-testing-and-release.md)
+- [第 8 阶段 spec（已验收）](docs/specs/08-testing-and-release.md)
 - [测试说明](docs/testing.md)
 - [发布流程](docs/releasing.md)
 - [v1.0.0 发布说明草稿](docs/release-notes-1.0.0.md)
@@ -378,7 +378,7 @@ Copyright 2026 Encrypted File Vault contributors.
 
 ## 后续阶段
 
-用户组与授权（已验收）→ 加密存储引擎（已验收）→ Web 端完整功能（已验收）→ 桌面客户端（已验收）→ 审计、备份与安全加固（已验收）→ 测试与开源发布（已完成，待验收）。每个阶段先写 spec，经确认后再开发。
+用户组与授权（已验收）→ 加密存储引擎（已验收）→ Web 端完整功能（已验收）→ 桌面客户端（已验收）→ 审计、备份与安全加固（已验收）→ 测试与开源发布（已验收）。项目 v1.0.0 已完成并发布；后续维护先写 spec，经确认后再开发。
 
 ## 开源准备
 

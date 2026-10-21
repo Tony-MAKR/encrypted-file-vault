@@ -2,9 +2,9 @@
 
 | 项目 | 内容 |
 |---|---|
-| 文档版本 | v1.1 |
-| 日期 | 2026-10-17 |
-| 状态 | **总体方案已确认；第 1–7 阶段已验收；第 8 阶段已完成，等待验收** |
+| 文档版本 | v1.2 |
+| 日期 | 2026-10-21 |
+| 状态 | **总体方案已确认；第 1–8 阶段全部验收通过；v1.0.0 已发布** |
 | 确认方式 | 你已回复“按推荐方案来” |
 | 关联文档 | [可行性研究报告](01-feasibility-study.md) · [需求分析说明书](02-requirements-analysis.md) · [第 1 阶段 spec](specs/01-project-foundation.md) · [第 2 阶段 spec](specs/02-accounts-and-roles.md) · [第 3 阶段 spec](specs/03-groups-and-authorization.md) · [第 4 阶段 spec](specs/04-encryption-engine.md) · [第 5 阶段 spec](specs/05-web-features.md) · [第 6 阶段 spec](specs/06-desktop-client.md) · [第 7 阶段 spec](specs/07-audit-backup-hardening.md) · [第 8 阶段 spec](specs/08-testing-and-release.md) |
 
@@ -108,8 +108,9 @@
 11. 第 6 阶段未修改数据库结构，现有账号、条目、授权、密钥和密文保持不变。
 12. 第 7 阶段“审计、备份与安全加固”已于 2026-10-21 验收通过：可查询审计、加密备份与验证、命令行恢复、备份提醒和部署安全检查；详见 [第 7 阶段 spec](specs/07-audit-backup-hardening.md) 第十六节。
 13. 第 7 阶段只新增审计记录表和备份记录表，现有账号、条目、授权、密钥和密文保持不变；按 D7-7 A，仍未开放局域网。
-14. 第 8 阶段“测试与开源发布”已完成，等待验收：Apache-2.0 许可证、中英文 README、社区文档、Playwright 测试、GitHub Actions 配置、依赖与密钥扫描、1.0.0 发布材料和发布演练；详见 [第 8 阶段 spec](specs/08-testing-and-release.md) 第十五、十六节。
+14. 第 8 阶段“测试与开源发布”已于 2026-10-21 验收通过：Apache-2.0 许可证、中英文 README、社区文档、Playwright 测试、GitHub Actions 配置、依赖与密钥扫描、1.0.0 发布材料和发布演练；详见 [第 8 阶段 spec](specs/08-testing-and-release.md) 第十六节。
 15. 2026-10-21 你明确要求“帮我操作发布”，已创建公开仓库并发布 v1.0.0：https://github.com/Tony-MAKR/encrypted-file-vault 。main 分支 CI（Windows 测试和依赖审计）已通过，Release 已上传安装包、免安装包、SHA-256 和安装说明；GitHub 私密安全报告、secret scanning 和 push protection 已启用。
+16. 第 8 阶段验收通过后，项目 v1.0.0 正式完成。后续进入维护：先处理安全报告和依赖更新，新功能先写 spec 再开发。
 
 ---
 
