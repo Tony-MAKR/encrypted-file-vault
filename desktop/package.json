@@ -1,11 +1,11 @@
 {
   "name": "encrypted-file-vault-desktop",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Windows desktop shell for the encrypted file vault",
   "main": "main.js",
   "author": "Encrypted File Vault contributors",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "scripts": {
     "start": "electron .",
     "test": "node --test tests/urls.test.js tests/config.test.js tests/server-check.test.js",
@@ -35,6 +35,14 @@
       {
         "from": "dist-build-info.json",
         "to": "build-info.json"
+      },
+      {
+        "from": "../LICENSE",
+        "to": "LICENSE"
+      },
+      {
+        "from": "../NOTICE",
+        "to": "NOTICE"
       }
     ],
     "asar": true,

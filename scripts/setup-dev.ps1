@@ -58,6 +58,18 @@ if (Test-Path (Join-Path $Desktop "package.json")) {
     }
 }
 
+$E2E = Join-Path $Root "e2e"
+if (Test-Path (Join-Path $E2E "package.json")) {
+    Write-Host "Installing browser test dependencies..."
+    Push-Location $E2E
+    try {
+        npm install
+    }
+    finally {
+        Pop-Location
+    }
+}
+
 Write-Host ""
 Write-Host "Setup complete."
 Write-Host "Development: powershell -ExecutionPolicy Bypass -File scripts/dev.ps1"

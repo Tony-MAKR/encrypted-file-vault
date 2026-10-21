@@ -1,0 +1,29 @@
+加密文件管理系统 (Encrypted File Vault)
+Copyright 2026 Encrypted File Vault contributors
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full text.
+
+This product includes or depends on third-party open-source software.
+The main components and their licenses are:
+
+- Django — BSD 3-Clause License
+- Django REST framework — BSD 3-Clause License
+- django-cors-headers — MIT License
+- WhiteNoise — MIT License
+- cryptography — Apache License 2.0 or BSD 3-Clause License
+- argon2-cffi / argon2-cffi-bindings — MIT License
+- python-dotenv — BSD 3-Clause License
+- React / React DOM — MIT License
+- React Router — MIT License
+- Vite — MIT License
+- TypeScript — Apache License 2.0
+- Oxlint — MIT License
+- Electron — MIT License
+- electron-builder — MIT License
+
+The full license texts of dependencies are available in their respective
+packages. No third-party source code is copied into this repository.
+
+Windows, Microsoft Edge, and GitHub are trademarks of their respective
+owners. This project is not affiliated with or endorsed by them.

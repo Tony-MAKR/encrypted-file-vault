@@ -2,9 +2,9 @@
 
 | 项目 | 内容 |
 |---|---|
-| 文档版本 | v0.1（待审阅） |
+| 文档版本 | v0.2（实施完成） |
 | 日期 | 2026-10-21 |
-| 状态 | **未开发**；等待你确认本 spec 和 7 个关键决定 |
+| 状态 | **已实现，等待验收**；七项决定按推荐（全部 A）执行 |
 | 阶段 | 第 8 阶段 / 共 9 个阶段（0–8） |
 | 前置 | 第 7 阶段“审计、备份与安全加固”已于 2026-10-21 验收通过 |
 | 依据 | [项目立项与需求确认](../00-project-charter.md) · [可行性研究报告](../01-feasibility-study.md) · [需求分析说明书](../02-requirements-analysis.md) |
@@ -169,19 +169,17 @@
 
 请确认：
 
-- [ ] D8-1 许可证：**A. Apache-2.0（推荐）** / B. AGPL-3.0 / C. MIT
-- [ ] D8-2 测试范围：A. 现有测试 + CI / **B. 增加少量 Playwright 测试（推荐）** / C. 只手动
-- [ ] D8-3 CI 环境：**A. GitHub Actions Windows（推荐）** / B. Ubuntu / C. 两者都跑
-- [ ] D8-4 文档语言：**A. 中文为主 + 英文 README（推荐）** / B. 全部双语 / C. 只中文
-- [ ] D8-5 发布内容：**A. 安装包 + 免安装包 + SHA-256 + 源码（推荐）** / B. 只源码 / C. 只安装包
-- [ ] D8-6 公开方式：**A. 只准备，不自动推送（推荐）** / B. 授权我推送 / C. 暂不准备
-- [ ] D8-7 安全披露：**A. SECURITY.md + GitHub 私密报告（推荐）** / B. 公开邮箱 / C. 公开 Issue
-- [ ] 已知悉：本阶段不修改数据库和加密逻辑，现有数据保持不变。
-- [ ] 已知悉：安装包未签名，发布时附 SHA-256；首个公开版本建议为 `1.0.0`。
+- [x] D8-1 许可证：**A. Apache-2.0（推荐）** / B. AGPL-3.0 / C. MIT
+- [x] D8-2 测试范围：A. 现有测试 + CI / **B. 增加少量 Playwright 测试（推荐）** / C. 只手动
+- [x] D8-3 CI 环境：**A. GitHub Actions Windows（推荐）** / B. Ubuntu / C. 两者都跑
+- [x] D8-4 文档语言：**A. 中文为主 + 英文 README（推荐）** / B. 全部双语 / C. 只中文
+- [x] D8-5 发布内容：**A. 安装包 + 免安装包 + SHA-256 + 源码（推荐）** / B. 只源码 / C. 只安装包
+- [x] D8-6 公开方式：**A. 只准备，不自动推送（推荐）** / B. 授权我推送 / C. 暂不准备
+- [x] D8-7 安全披露：**A. SECURITY.md + GitHub 私密报告（推荐）** / B. 公开邮箱 / C. 公开 Issue
+- [x] 已知悉：本阶段不修改数据库和加密逻辑，现有数据保持不变。
+- [x] 已知悉：安装包未签名，发布时附 SHA-256；首个公开版本建议为 `1.0.0`。
 
-回复 **“阶段 8 按推荐开始”** 即表示以上全部按推荐执行。  
-如果对某个决定有不同想法，例如“许可证用 AGPL”，直接说明；我会先调整 spec。  
-**在你确认前，不添加许可证、不写发布文档、不配置 CI。**
+2026-10-21 你已回复“阶段 8 按推荐开始”，以上按 A 执行。
 
 ---
 
@@ -223,7 +221,7 @@
 
 ### 5.4 浏览器端到端测试（若选 D8-2 B）
 
-使用 Playwright + Chromium，只覆盖 5 条核心路径：
+使用 Playwright + Microsoft Edge（Chromium 内核），只覆盖 5 条核心路径：
 
 | 编号 | 路径 | 检查点 |
 |---|---|---|
@@ -285,7 +283,7 @@
 1. **backend**：安装 Python 依赖，运行 `pytest`、`ruff check .`。
 2. **frontend**：`npm ci`、`npm run build`、`npm run lint`。
 3. **desktop**：`npm ci`、`npm test`。
-4. **e2e**（若选 B）：安装 Playwright Chromium，启动临时服务器，运行核心流程。
+4. **e2e**（若选 B）：使用 Windows runner 自带的 Microsoft Edge（Chromium 内核），启动临时服务器，运行核心流程。
 5. **security**（可选独立任务）：`pip-audit`、`npm audit`、密钥扫描。
 
 ### 6.2 约束
@@ -464,18 +462,130 @@
 
 ---
 
-## 十五、确认清单（再列一次）
+## 十五、实施记录
 
-- [ ] D8-1 许可证：**A. Apache-2.0（推荐）** / B. AGPL-3.0 / C. MIT
-- [ ] D8-2 测试范围：A. 现有测试 + CI / **B. 增加少量 Playwright 测试（推荐）** / C. 只手动
-- [ ] D8-3 CI 环境：**A. GitHub Actions Windows（推荐）** / B. Ubuntu / C. 两者都跑
-- [ ] D8-4 文档语言：**A. 中文为主 + 英文 README（推荐）** / B. 全部双语 / C. 只中文
-- [ ] D8-5 发布内容：**A. 安装包 + 免安装包 + SHA-256 + 源码（推荐）** / B. 只源码 / C. 只安装包
-- [ ] D8-6 公开方式：**A. 只准备，不自动推送（推荐）** / B. 授权我推送 / C. 暂不准备
-- [ ] D8-7 安全披露：**A. SECURITY.md + GitHub 私密报告（推荐）** / B. 公开邮箱 / C. 公开 Issue
-- [ ] 已知悉：本阶段不修改数据库和加密逻辑，现有数据保持不变。
-- [ ] 已知悉：安装包未签名，发布时附 SHA-256；首个公开版本建议为 `1.0.0`。
+> 实施日期：2026-10-21。七项决定均按推荐执行（A）。本阶段未修改数据库结构、密钥、授权或加密格式。
 
-回复 **“阶段 8 按推荐开始”** 即表示以上全部按推荐执行。  
-如果对某个决定有不同想法，例如“许可证用 AGPL”，直接说明；我会先调整 spec。  
-**在你确认前，不添加许可证、不写发布文档、不配置 CI。**
+### 15.1 许可证与社区文档
+
+| 文件 | 内容 |
+|---|---|
+| `LICENSE` | Apache License 2.0 全文，版权行 2026 Encrypted File Vault contributors |
+| `NOTICE` | 主要第三方组件和许可证说明，未复制第三方源码 |
+| `README.md` | 更新为 v1.0.0 开源版本，增加英文入口、贡献、安全报告和许可证章节 |
+| `README.en.md` | 英文简介、功能、快速开始、桌面端、安全边界、测试、文档、贡献和许可证 |
+| `CONTRIBUTING.md` | 开发环境、代码风格、测试、PR 流程和数据安全红线 |
+| `CODE_OF_CONDUCT.md` | 改编自 Contributor Covenant 2.1 的行为准则 |
+| `SECURITY.md` | 支持版本、GitHub 私密报告、响应时间、安全边界 |
+| `CHANGELOG.md` | 1.0.0 首次公开版本的功能、安全变更和已知限制 |
+| `docs/testing.md` | 测试命令、E2E、人工验收清单和安全扫描 |
+| `docs/releasing.md` | 版本号、发布检查、构建、GitHub Release、回滚 |
+| `docs/release-notes-1.0.0.md` | Release 说明草稿、SHA-256 和安装说明 |
+
+- `frontend/package.json`、`desktop/package.json`、`e2e/package.json` 的许可证字段统一为 `Apache-2.0`。
+
+### 15.2 测试与持续集成
+
+- 新增 `e2e/` Playwright 工程，使用 `@playwright/test 1.64.1` 和本机 Microsoft Edge（Chromium 内核），不额外下载浏览器。
+- 新增 5 条串行核心测试：
+  1. 首次设置管理员并登录；
+  2. 普通用户看不到管理员入口，访问管理页会回到主页，并完成首次改密；
+  3. 管理员初始化保险箱、保存文字秘密、授权用户，用户查看并显示密码；
+  4. 审计页面显示登录、创建条目、保存文字、显示密码等操作；
+  5. 创建并验证加密备份。
+- E2E 使用系统临时目录下的独立 `DATA_DIR`，启动 `127.0.0.1:8020` 的临时服务器；每次运行前清理旧临时数据，结束后尽力删除。
+- 新增 `scripts/e2e-server.ps1`：迁移临时数据库并启动测试服务器，支持项目虚拟环境或 CI 全局 Python。
+- `scripts/setup-dev.ps1` 增加 E2E 依赖安装；`scripts/check.ps1` 增加可选 `-IncludeE2E`。
+- 新增 `.github/workflows/ci.yml`：
+  - Windows GitHub Actions；
+  - 后端 pytest + Ruff；
+  - 前端 `npm ci` + 构建 + Oxlint；
+  - 桌面单元测试；
+  - Playwright 浏览器测试；
+  - 独立依赖审计任务（pip-audit、npm audit）。
+- 新增 Dependabot 配置、Bug/功能 Issue 模板和 Pull Request 模板。
+
+### 15.3 安全检查
+
+| 检查 | 结果 |
+|---|---|
+| `pip-audit -r requirements.txt` | 无已知漏洞 |
+| 前端 `npm audit --omit=dev --audit-level=high` | 0 个漏洞 |
+| 桌面 `npm audit --audit-level=high` | 0 个 high/critical；8 个 moderate，全部位于 electron-builder 构建期依赖链，不进入运行时应用包 |
+| 密钥/隐私扫描 | 当前文件和 Git 历史中没有 `.env`、`data/`、数据库、密钥文件或备份；`DJANGO_SECRET_KEY` 只有示例占位值；未发现私钥、AWS 密钥或 GitHub 令牌 |
+| `manage.py check --deploy` | 4 个预期警告：HSTS、SSL 重定向、安全会话 Cookie、安全 CSRF Cookie；本版本仍为本机 HTTP，未开放网络 |
+| 测试覆盖率 | 后端 89%（`pytest --cov=apps`），未设置强制门槛 |
+
+- 未使用 `gitleaks`（环境未安装）；使用 Git 历史和常见密钥模式检查代替，发布前建议在 GitHub 启用 secret scanning。
+
+### 15.4 版本与发布材料
+
+- 后端、前端、桌面端版本统一为 `1.0.0`。
+- 桌面安装包和免安装包重建，安装/启动/卸载冒烟通过。
+- 发布产物（不进入 Git）：
+
+| 文件 | SHA-256 |
+|---|---|
+| `EncryptedFileVault-Setup-1.0.0-x64.exe` | `0dcd703fd0f4b8d73c271d6a1a64b648bbe41182bc552edd9d46345b712cce7e` |
+| `EncryptedFileVault-Portable-1.0.0-x64.zip` | `b752ca0958d958fd25dd2bec9ff16bbe3d8ac6b881cfe5c5bd36be87c2af66fd` |
+
+- 发布演练在独立临时数据目录完成：
+  - 创建管理员和加密备份；
+  - 修改数据库中的显示名；
+  - 从备份恢复，显示名还原，数据库完整性 `ok`，`backup_restored` 审计存在；
+  - 静默安装 1.0.0 客户端、启动冒烟、卸载；卸载后服务器健康检查仍为 `ok`。
+- 未创建 GitHub 仓库、未添加远程、未推送、未创建 Release（符合 D8-6 A）。
+
+### 15.5 验证结果
+
+| 项目 | 结果 |
+|---|---|
+| 后端测试 | 161 个通过 |
+| 后端覆盖率 | 89% |
+| Ruff | 通过 |
+| 前端构建 / Oxlint | 通过 |
+| 桌面单元测试 | 30 个通过 |
+| Playwright | 5 个通过（本机 Edge） |
+| Python 依赖审计 | 无已知漏洞 |
+| npm 运行时审计 | 无 high/critical |
+| 桌面安装/卸载 | 通过 |
+| 备份/恢复演练 | 通过 |
+| 真实数据库 | 本阶段未执行迁移或结构修改；当前数据库完整性 `ok`，现有数据保留 |
+| 版本一致性 | 后端/前端/桌面均为 `1.0.0` |
+| GitHub 推送 | 未推送（无远程、无 Release） |
+
+### 15.6 与 spec 的差异和已知事项
+
+- Playwright 使用本机 Microsoft Edge，而不是下载额外 Chromium；更贴近 Windows 实际环境，CI 也使用 Windows runner 自带的 Edge。
+- E2E 的全局清理在 Windows 上偶尔提示临时目录被占用；下一次运行会在启动前清理同一临时目录，不影响测试结果。
+- GitHub Actions 尚未在 GitHub 上实际运行（本阶段不创建仓库、不推送）；工作流按本地等价命令编写，并经过人工检查。
+- 桌面依赖仍有 8 个 moderate 构建期漏洞，来自 electron-builder 的上游依赖；不进入最终应用运行时，开源发布前可继续跟进上游更新。
+- 安装包仍未签名，SmartScreen 提示和 SHA-256 校验方法已写入 README、Release 说明和 `INSTALL.txt`。
+- 真实项目地址、许可证版权人和发布仓库名称由你在正式公开前确认；当前版权行为 “Encrypted File Vault contributors”。
+
+---
+
+## 十六、验收记录
+
+> 等待你回复“阶段 8 验收通过”后填写。以下为当前自动化与手动验证结果。
+
+| 编号 | 场景 | 状态 |
+|---|---|---|
+| AC8-01 | 许可证 | 通过（Apache-2.0 + NOTICE） |
+| AC8-02 | 中文 README | 通过 |
+| AC8-03 | 英文 README | 通过 |
+| AC8-04 | 社区文档 | 通过 |
+| AC8-05 | CI 配置 | 配置完成；本地等价命令通过；尚未在 GitHub 运行 |
+| AC8-06 | 后端测试 | 通过（161 个，覆盖率 89%） |
+| AC8-07 | 前端测试 | 通过 |
+| AC8-08 | 桌面测试 | 通过（30 个 + 安装包冒烟） |
+| AC8-09 | 浏览器 E2E | 通过（5 条） |
+| AC8-10 | 依赖扫描 | 通过（无 high/critical；桌面构建期 moderate 已记录） |
+| AC8-11 | 密钥扫描 | 通过（当前文件和历史无真实秘密） |
+| AC8-12 | 发布材料 | 通过（安装包、免安装包、SHA-256、INSTALL、Release 草稿） |
+| AC8-13 | 发布演练 | 通过（全新安装、备份、恢复、卸载） |
+| AC8-14 | 数据安全 | 通过（未修改数据库结构或真实数据） |
+| AC8-15 | 不自动推送 | 通过（无远程、无推送） |
+| AC8-16 | 版本一致 | 通过（1.0.0） |
+
+**下一步**：等待你验收。确认后，项目 v1.0.0 正式完成；你可以按 [发布流程](../releasing.md) 手动创建 GitHub 仓库、推送并发布。未经你明确授权，不会自动推送。

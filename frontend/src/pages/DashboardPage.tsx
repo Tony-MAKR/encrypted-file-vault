@@ -109,14 +109,14 @@ export function DashboardPage() {
   return (
     <AppShell active="dashboard">
       <section className="dashboard-hero">
-        <p className="eyebrow">第 7 阶段 · 审计与备份</p>
+        <p className="eyebrow">v1.0.0 · 本地加密保险箱</p>
         <h1>欢迎回来，{user.display_name}</h1>
         <p className="lede">
-          关键操作会写入审计记录；管理员可以创建加密备份并验证完整性。加密仍按第 4 阶段规则运行。
+          关键操作会写入审计记录；管理员可以创建加密备份并验证完整性。请定期备份并妥善保管主密码。
         </p>
         <div className="tag-row">
           <span className="role-badge">{roleLabel}</span>
-          <span className="stage-badge">第 7 阶段 / 共 9 个阶段</span>
+          <span className="stage-badge">Apache-2.0 开源版本</span>
         </div>
       </section>
 

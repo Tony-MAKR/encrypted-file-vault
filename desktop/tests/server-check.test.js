@@ -33,14 +33,14 @@ test('a healthy server returns its version', async (t) => {
     json(response, 200, {
       status: 'ok',
       database: 'ok',
-      version: '0.6.0',
+      version: '1.0.0',
     })
   })
 
   const result = await testServer(`${base}/`)
   assert.equal(result.ok, true)
   assert.equal(result.serverUrl, base)
-  assert.equal(result.version, '0.6.0')
+  assert.equal(result.version, '1.0.0')
 })
 
 test('an HTTP error is reported without leaking details', async (t) => {

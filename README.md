@@ -1,10 +1,12 @@
 # 加密文件管理系统
 
-一个本地部署的加密文件与敏感信息管理系统的长期项目。管理员可以加密保存文件、网站账号、数据库密码等内容，并按用户组或单个用户授权；只有被授权的人可以查看和解密。
+一个本地部署的加密文件与敏感信息管理系统的长期开源项目。管理员可以加密保存文件、网站账号、数据库密码等内容，并按用户组或单个用户授权；只有被授权的人可以查看和解密。
 
-> **当前状态：第 1–7 阶段已验收通过；第 8 阶段“测试与开源发布”的 spec 已写好，等待审阅。**
-> 第 7 阶段完成了可查询审计、加密备份与验证、命令行恢复和部署安全检查；现有账号、条目、授权和加密内容都已保留。
-> 现在系统只在本机使用，**不要开放到局域网或公网**；局域网/HTTPS 尚未开放。
+[English README](README.en.md)
+
+> **当前版本：v1.0.0（第 8 阶段已完成，等待验收；尚未推送到 GitHub）。**
+> 第 1–8 阶段功能已完成；真实 `.env`、`data/`、密钥、密文和备份不进入 Git。
+> 现在系统只在本机使用，**不要开放到局域网或公网**；局域网/HTTPS 尚未配置。
 
 ## 当前能做什么
 
@@ -38,7 +40,8 @@
 - 连续登录失败锁定、会话空闲/最长超时、停用或重置后旧会话立即失效。
 - 密码使用 Argon2id 哈希；内容使用 AES-256-GCM 信封加密；关键操作写安全日志。
 - 配置、密钥、数据目录与代码分离；真实 `.env` 和 `data/` 不进版本库。
-- 后端测试、代码检查和前端构建可通过。
+- 后端测试、代码检查和前端构建可通过；包含 GitHub Actions 配置和 Playwright 浏览器测试。
+- 项目已加入 Apache-2.0 许可证、贡献指南、安全策略和发布流程文档。
 
 ## 当前不能做什么
 
@@ -128,8 +131,8 @@ powershell -ExecutionPolicy Bypass -File scripts/build-desktop.ps1
 
 | 文件 | 用途 |
 |---|---|
-| `EncryptedFileVault-Setup-0.7.0-x64.exe` | 安装版，带开始菜单、桌面快捷方式和卸载入口 |
-| `EncryptedFileVault-Portable-0.7.0-x64.zip` | 免安装版，解压后运行 |
+| `EncryptedFileVault-Setup-1.0.0-x64.exe` | 安装版，带开始菜单、桌面快捷方式和卸载入口 |
+| `EncryptedFileVault-Portable-1.0.0-x64.zip` | 免安装版，解压后运行 |
 | `SHA256SUMS.txt` | 发布文件的 SHA-256 校验值 |
 | `INSTALL.txt` | 安装说明 |
 
@@ -241,7 +244,14 @@ cd backend
 powershell -ExecutionPolicy Bypass -File scripts/check.ps1
 ```
 
-包含后端 pytest、Ruff 检查、前端生产构建、Oxlint 检查和桌面端单元测试。桌面安装包用 `scripts/build-desktop.ps1` 单独构建。
+包含后端 pytest、Ruff 检查、前端生产构建、Oxlint 检查和桌面端单元测试。
+需要同时运行浏览器端到端测试时，使用：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/check.ps1 -IncludeE2E
+```
+
+浏览器测试需要先安装 `e2e` 依赖并构建前端；完整说明见 [测试说明](docs/testing.md)。桌面安装包用 `scripts/build-desktop.ps1` 单独构建。
 
 ## 手动启动（便于排查）
 
@@ -326,6 +336,24 @@ data/backups/  数据库快照与加密备份包（不进入 Git）
 - 主密钥文件权限采用尽力设置；建议同时开启 BitLocker，并使用受限 Windows 账户运行服务。
 - **绝对不要**把服务器改到 `0.0.0.0` 或开放到公网；开放局域网需要单独确认，并先完成 HTTPS 证书和客户端信任配置。
 
+## 参与贡献
+
+- 开发环境、代码风格和提交要求见 [贡献指南](CONTRIBUTING.md)。
+- 社区交流请遵守 [贡献者行为准则](CODE_OF_CONDUCT.md)。
+- 功能建议和普通 Bug 请使用 GitHub Issue 模板。
+- 安全问题不要公开提交 Issue，请按 [安全策略](SECURITY.md) 私密报告。
+- 提交贡献即表示你同意按 Apache-2.0 许可证提供你的贡献。
+
+## 安全报告
+
+请使用仓库 GitHub 页面的 **Security → Report a vulnerability** 私密报告漏洞。不要在公开 Issue 中写漏洞细节或利用代码。支持版本、响应时间和安全边界见 [SECURITY.md](SECURITY.md)。
+
+## 许可证
+
+本项目使用 [Apache License 2.0](LICENSE)。第三方组件和许可证说明见 [NOTICE](NOTICE)。
+
+Copyright 2026 Encrypted File Vault contributors.
+
 ## 文档
 
 - [项目立项与需求确认](docs/00-project-charter.md)
@@ -338,12 +366,16 @@ data/backups/  数据库快照与加密备份包（不进入 Git）
 - [第 5 阶段 spec（已验收）](docs/specs/05-web-features.md)
 - [第 6 阶段 spec（已验收）](docs/specs/06-desktop-client.md)
 - [第 7 阶段 spec（已验收）](docs/specs/07-audit-backup-hardening.md)
-- [第 8 阶段 spec（待审阅）](docs/specs/08-testing-and-release.md)
+- [第 8 阶段 spec（已实现，待验收）](docs/specs/08-testing-and-release.md)
+- [测试说明](docs/testing.md)
+- [发布流程](docs/releasing.md)
+- [v1.0.0 发布说明草稿](docs/release-notes-1.0.0.md)
+- [变更日志](CHANGELOG.md)
 - [桌面客户端安装说明](docs/desktop-install.txt)
 
 ## 后续阶段
 
-用户组与授权（已验收）→ 加密存储引擎（已验收）→ Web 端完整功能（已验收）→ 桌面客户端（已验收）→ 审计、备份与安全加固（已验收）→ 测试与开源发布（spec 待审阅）。每个阶段先写 spec，经确认后再开发。
+用户组与授权（已验收）→ 加密存储引擎（已验收）→ Web 端完整功能（已验收）→ 桌面客户端（已验收）→ 审计、备份与安全加固（已验收）→ 测试与开源发布（已完成，待验收）。每个阶段先写 spec，经确认后再开发。
 
 ## 开源准备
 

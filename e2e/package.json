@@ -1,0 +1,13 @@
+{
+  "name": "encrypted-file-vault-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright browser tests for the encrypted file vault",
+  "scripts": {
+    "test": "npm --prefix ../frontend run build && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  },
+  "license": "Apache-2.0"
+}

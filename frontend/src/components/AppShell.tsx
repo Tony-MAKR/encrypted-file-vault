@@ -35,7 +35,7 @@ export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
           <BrandMark small />
           <span>
             <strong>加密文件管理系统</strong>
-            <small>第 7 阶段 · 审计与备份</small>
+            <small>v1.0.0 · 本地加密保险箱</small>
           </span>
         </Link>
 
@@ -105,8 +105,8 @@ export function AppShell({ children, active = 'dashboard' }: AppShellProps) {
       <main className="page">{children}</main>
 
       <footer className="app-footer">
-        <span>仅限本机使用 · 未开放局域网</span>
-        <span>第 7 阶段 / 共 9 个阶段</span>
+        <span>v1.0.0 · 仅限本机使用 · 未开放局域网</span>
+        <span>Apache-2.0 开源许可证</span>
       </footer>
     </div>
   )
