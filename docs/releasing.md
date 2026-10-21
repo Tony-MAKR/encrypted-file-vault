@@ -104,6 +104,20 @@ git tag -a v1.0.0 -m "v1.0.0"
 
 ## 7. 创建 GitHub Release
 
+### 7.1 仓库简介（About）
+
+创建 GitHub 仓库后，在右侧 **About** 填写一句简短描述，建议使用：
+
+> Self-hosted encrypted file and secrets manager for Windows with group- and user-level access control.
+
+建议同时添加 Topics：`encryption`、`django`、`react`、`electron`、`windows`、`self-hosted`、`password-manager`。
+
+中文简介可写：
+
+> 面向 Windows 的本地加密文件与敏感信息管理系统，支持按用户组或个人授权查看和解密。
+
+### 7.2 创建 Release
+
 在 GitHub 仓库页面：
 
 1. 选择标签 `v1.0.0`；

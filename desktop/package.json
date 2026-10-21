@@ -2,7 +2,7 @@
   "name": "encrypted-file-vault-desktop",
   "version": "1.0.0",
   "private": true,
-  "description": "Windows desktop shell for the encrypted file vault",
+  "description": "Windows desktop client for the encrypted file vault",
   "main": "main.js",
   "author": "Encrypted File Vault contributors",
   "license": "Apache-2.0",

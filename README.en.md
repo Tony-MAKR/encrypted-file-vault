@@ -1,5 +1,7 @@
 # Encrypted File Vault
 
+**In one line:** A self-hosted encrypted file and secrets manager for Windows with group- and user-level access control.
+
 A self-hosted, local-first encrypted file and secrets manager for Windows. Admins can store files and text secrets (website or database passwords) encrypted at rest, then grant access to groups or individual users. Only authorized users can view or download decrypted content.
 
 > **Status: v1.0.0, prepared for the first public release. The project currently targets Windows 10/11 and listens on `127.0.0.1` only. Do not expose it to a LAN or the public internet without HTTPS and an explicit deployment decision.**
