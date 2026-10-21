@@ -4,9 +4,9 @@
 |---|---|
 | 文档版本 | v1.1 |
 | 日期 | 2026-10-17 |
-| 状态 | **总体方案已确认；第 1–6 阶段已验收；第 7 阶段已实现，等待验收** |
+| 状态 | **总体方案已确认；第 1–7 阶段已验收；第 8 阶段 spec 待审阅** |
 | 确认方式 | 你已回复“按推荐方案来” |
-| 关联文档 | [可行性研究报告](01-feasibility-study.md) · [需求分析说明书](02-requirements-analysis.md) · [第 1 阶段 spec](specs/01-project-foundation.md) · [第 2 阶段 spec](specs/02-accounts-and-roles.md) · [第 3 阶段 spec](specs/03-groups-and-authorization.md) · [第 4 阶段 spec](specs/04-encryption-engine.md) · [第 5 阶段 spec](specs/05-web-features.md) · [第 6 阶段 spec](specs/06-desktop-client.md) · [第 7 阶段 spec](specs/07-audit-backup-hardening.md) |
+| 关联文档 | [可行性研究报告](01-feasibility-study.md) · [需求分析说明书](02-requirements-analysis.md) · [第 1 阶段 spec](specs/01-project-foundation.md) · [第 2 阶段 spec](specs/02-accounts-and-roles.md) · [第 3 阶段 spec](specs/03-groups-and-authorization.md) · [第 4 阶段 spec](specs/04-encryption-engine.md) · [第 5 阶段 spec](specs/05-web-features.md) · [第 6 阶段 spec](specs/06-desktop-client.md) · [第 7 阶段 spec](specs/07-audit-backup-hardening.md) · [第 8 阶段 spec](specs/08-testing-and-release.md) |
 
 ---
 
@@ -106,8 +106,9 @@
 9. 第 5 阶段实现了分类/标签、筛选搜索、主页统计、密码生成器和回收站永久删除；现有账号、条目、授权和加密内容保持不变。
 10. 第 6 阶段“桌面客户端”已于 2026-10-21 验收通过：Windows 桌面外壳、服务器地址配置、后端静态网页、安装包/免安装包和 SHA-256 校验；详见 [第 6 阶段 spec](specs/06-desktop-client.md) 第十六节。
 11. 第 6 阶段未修改数据库结构，现有账号、条目、授权、密钥和密文保持不变。
-12. 第 7 阶段“审计、备份与安全加固”已实现，等待验收：可查询审计、加密备份与验证、命令行恢复、备份提醒和部署安全检查；详见 [第 7 阶段 spec](specs/07-audit-backup-hardening.md) 第十五、十六节。
-13. 本阶段只新增审计记录表和备份记录表；现有账号、条目、授权、密钥和密文保持不变。按第七阶段决定 D7-7 A，仍未开放局域网。
+12. 第 7 阶段“审计、备份与安全加固”已于 2026-10-21 验收通过：可查询审计、加密备份与验证、命令行恢复、备份提醒和部署安全检查；详见 [第 7 阶段 spec](specs/07-audit-backup-hardening.md) 第十六节。
+13. 第 7 阶段只新增审计记录表和备份记录表，现有账号、条目、授权、密钥和密文保持不变；按 D7-7 A，仍未开放局域网。
+14. 第 8 阶段“测试与开源发布”的 spec 已写好，重点是自动化测试、CI、许可证、双语文档、安全披露和发布流程；见 [第 8 阶段 spec](specs/08-testing-and-release.md)。确认前不添加许可证、不配置 CI、不推送 GitHub。
 
 ---
 
