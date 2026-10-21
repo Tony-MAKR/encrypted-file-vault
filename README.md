@@ -4,10 +4,11 @@
 
 一个本地部署的加密文件与敏感信息管理系统的长期开源项目。管理员可以加密保存文件、网站账号、数据库密码等内容，并按用户组或单个用户授权；只有被授权的人可以查看和解密。
 
-[English README](README.en.md)
+[English README](README.en.md) · [GitHub 仓库](https://github.com/Tony-MAKR/encrypted-file-vault) · [v1.0.0 Release](https://github.com/Tony-MAKR/encrypted-file-vault/releases/tag/v1.0.0)
 
-> **当前版本：v1.0.0（第 8 阶段已完成，等待验收；尚未推送到 GitHub）。**
-> 第 1–8 阶段功能已完成；真实 `.env`、`data/`、密钥、密文和备份不进入 Git。
+> **当前版本：v1.0.0，已发布到 GitHub。**
+> 仓库：https://github.com/Tony-MAKR/encrypted-file-vault
+> 第 1–8 阶段功能已完成，等待最终验收；真实 `.env`、`data/`、密钥、密文和备份不进入 Git。
 > 现在系统只在本机使用，**不要开放到局域网或公网**；局域网/HTTPS 尚未配置。
 
 ## 当前能做什么

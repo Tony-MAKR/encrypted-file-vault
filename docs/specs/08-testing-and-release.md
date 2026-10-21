@@ -534,7 +534,7 @@
   - 修改数据库中的显示名；
   - 从备份恢复，显示名还原，数据库完整性 `ok`，`backup_restored` 审计存在；
   - 静默安装 1.0.0 客户端、启动冒烟、卸载；卸载后服务器健康检查仍为 `ok`。
-- 未创建 GitHub 仓库、未添加远程、未推送、未创建 Release（符合 D8-6 A）。
+- 2026-10-21 你在确认仓库名、公开可见性和 Release 方式后，明确要求执行发布；已创建公开仓库 https://github.com/Tony-MAKR/encrypted-file-vault ，推送 main 和 v1.0.0 标签，并发布 Release。D8-6 A 的默认仍是“只准备不推送”，本次执行基于你的单独授权。
 
 ### 15.5 验证结果
 
@@ -552,16 +552,16 @@
 | 备份/恢复演练 | 通过 |
 | 真实数据库 | 本阶段未执行迁移或结构修改；当前数据库完整性 `ok`，现有数据保留 |
 | 版本一致性 | 后端/前端/桌面均为 `1.0.0` |
-| GitHub 推送 | 未推送（无远程、无 Release） |
+| GitHub 发布 | 已按你的明确授权推送；main CI 通过（Tests Windows + Dependency audit）；v1.0.0 Release 已上传 4 个附件 |
 
 ### 15.6 与 spec 的差异和已知事项
 
 - Playwright 使用本机 Microsoft Edge，而不是下载额外 Chromium；更贴近 Windows 实际环境，CI 也使用 Windows runner 自带的 Edge。
 - E2E 的全局清理在 Windows 上偶尔提示临时目录被占用；下一次运行会在启动前清理同一临时目录，不影响测试结果。
-- GitHub Actions 尚未在 GitHub 上实际运行（本阶段不创建仓库、不推送）；工作流按本地等价命令编写，并经过人工检查。
+- GitHub Actions 已在 main 分支实际运行并通过：`Tests (Windows)` 和 `Dependency audit` 两个任务均成功；Dependabot 还自动创建了若干依赖更新 PR。
 - 桌面依赖仍有 8 个 moderate 构建期漏洞，来自 electron-builder 的上游依赖；不进入最终应用运行时，开源发布前可继续跟进上游更新。
 - 安装包仍未签名，SmartScreen 提示和 SHA-256 校验方法已写入 README、Release 说明和 `INSTALL.txt`。
-- 真实项目地址、许可证版权人和发布仓库名称由你在正式公开前确认；当前版权行为 “Encrypted File Vault contributors”。
+- 项目地址为 https://github.com/Tony-MAKR/encrypted-file-vault ；版权行使用 “Encrypted File Vault contributors”，如需改成你的名字可在发布后单独调整。
 
 ---
 
@@ -575,7 +575,7 @@
 | AC8-02 | 中文 README | 通过 |
 | AC8-03 | 英文 README | 通过 |
 | AC8-04 | 社区文档 | 通过 |
-| AC8-05 | CI 配置 | 配置完成；本地等价命令通过；尚未在 GitHub 运行 |
+| AC8-05 | CI 配置 | 通过（GitHub main 分支：Tests Windows + Dependency audit 均成功） |
 | AC8-06 | 后端测试 | 通过（161 个，覆盖率 89%） |
 | AC8-07 | 前端测试 | 通过 |
 | AC8-08 | 桌面测试 | 通过（30 个 + 安装包冒烟） |
@@ -585,7 +585,7 @@
 | AC8-12 | 发布材料 | 通过（安装包、免安装包、SHA-256、INSTALL、Release 草稿） |
 | AC8-13 | 发布演练 | 通过（全新安装、备份、恢复、卸载） |
 | AC8-14 | 数据安全 | 通过（未修改数据库结构或真实数据） |
-| AC8-15 | 不自动推送 | 通过（无远程、无推送） |
+| AC8-15 | 不自动推送 | 通过（经你明确授权后才推送；未擅自推送） |
 | AC8-16 | 版本一致 | 通过（1.0.0） |
 
 **下一步**：等待你验收。确认后，项目 v1.0.0 正式完成；你可以按 [发布流程](../releasing.md) 手动创建 GitHub 仓库、推送并发布。未经你明确授权，不会自动推送。

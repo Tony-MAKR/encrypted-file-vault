@@ -109,7 +109,7 @@
 12. 第 7 阶段“审计、备份与安全加固”已于 2026-10-21 验收通过：可查询审计、加密备份与验证、命令行恢复、备份提醒和部署安全检查；详见 [第 7 阶段 spec](specs/07-audit-backup-hardening.md) 第十六节。
 13. 第 7 阶段只新增审计记录表和备份记录表，现有账号、条目、授权、密钥和密文保持不变；按 D7-7 A，仍未开放局域网。
 14. 第 8 阶段“测试与开源发布”已完成，等待验收：Apache-2.0 许可证、中英文 README、社区文档、Playwright 测试、GitHub Actions 配置、依赖与密钥扫描、1.0.0 发布材料和发布演练；详见 [第 8 阶段 spec](specs/08-testing-and-release.md) 第十五、十六节。
-15. 未创建 GitHub 仓库、未推送、未发布 Release；正式公开由你按发布流程手动完成。
+15. 2026-10-21 你明确要求“帮我操作发布”，已创建公开仓库并发布 v1.0.0：https://github.com/Tony-MAKR/encrypted-file-vault 。main 分支 CI（Windows 测试和依赖审计）已通过，Release 已上传安装包、免安装包、SHA-256 和安装说明；GitHub 私密安全报告、secret scanning 和 push protection 已启用。
 
 ---
 
